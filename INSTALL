@@ -1,0 +1,36 @@
+
+- Requirements:
+
+  - A C++ compiler with C++11 support.
+    The following compiler has been tested:
+    - GCC 4.8.2 (GNU/Linux x86_64).
+
+  - Gnuspeech-SA.
+
+  - PortAudio with C++ binding (tested with version v19_20140130).
+
+  - Speech Dispatcher (tested with version 0.8.1).
+
+- Build Gnuspeech-SA, with source directory at ../gnuspeech_sa and
+  build directory at ../gnuspeech_sa-build.
+
+- Build (GNU/Linux):
+
+  mkdir ../sd_gnuspeech-build
+  cd ../sd_gnuspeech-build
+  cmake -D CMAKE_BUILD_TYPE=Release ../sd_gnuspeech
+  make
+
+- Set the absolute path of the configuration directory
+  in conf/gnuspeech.conf.
+
+- Add the following line to ~/.config/speech-dispatcher/speechd.conf
+  or /etc/speech-dispatcher/speechd.conf:
+
+  AddModule "gnuspeech" "<absolute_path_to>/sd_gnuspeech" "<absolute_path_to>/gnuspeech.conf"
+
+  (
+    - Fill <absolute_path_to>.
+    - Don't forget to uncomment the line:
+        AddModule "dummy"         "sd_dummy"      ""
+  )
