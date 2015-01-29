@@ -24,6 +24,8 @@
 #include <thread>
 #include <vector>
 
+#include "portaudiocpp/PortAudioCpp.hxx"
+
 #include "ModuleController.h"
 
 
@@ -54,6 +56,9 @@ private:
 	void set();
 	void speak();
 
+	int portaudioCallback(const void* inputBuffer, void* paOutputBuffer, unsigned long framesPerBuffer,
+				const PaStreamCallbackTimeInfo* timeInfo, PaStreamCallbackFlags statusFlags);
+
 	ModuleController& moduleController_;
 	std::thread synthThread_;
 
@@ -67,10 +72,14 @@ private:
 	std::string commandMessage_;
 
 	std::stringstream trmParamStream_;
-	std::vector<float> outputBuffer_;
+	std::vector<float> audioBuffer_;
 
 	ModuleConfiguration moduleConfig_;
 	double defaultPitchOffset_;
+
+	unsigned int audioBufferIndex_;
+	unsigned int numInputChannels_;
+	int audioOutputDeviceIndex_;
 };
 
 #endif /* SYNTHESIZER_CONTROLLER_H_ */

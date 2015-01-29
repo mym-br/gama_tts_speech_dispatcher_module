@@ -19,10 +19,9 @@
 
 #include <cmath> /* pow */
 #include <exception>
+#include <iostream>
 #include <cstring>
 #include <string>
-
-#include "portaudiocpp/PortAudioCpp.hxx"
 
 #include "Controller.h"
 #include "en/phonetic_string_parser/PhoneticStringParser.h"
@@ -33,9 +32,6 @@
 #include "Util.h"
 
 #define TRM_CONTROL_MODEL_CONFIG_FILE "/monet.xml"
-#define AUDIO_BLOCK_SIZE 8192
-#define PORTAUDIO_FRAMES_PER_BUFFER 2048
-//#define PORTAUDIO_FRAMES_PER_BUFFER paFramesPerBufferUnspecified
 
 
 
@@ -43,6 +39,9 @@ SynthesizerController::SynthesizerController(ModuleController& moduleController)
 		: moduleController_(moduleController)
 		, synthThread_(&SynthesizerController::exec, std::ref(*this))
 		, defaultPitchOffset_(0.0)
+		, audioBufferIndex_(0)
+		, numInputChannels_(0)
+		, audioOutputDeviceIndex_(-1)
 {
 }
 
@@ -88,6 +87,7 @@ SynthesizerController::init()
 	try {
 		GS::KeyValueFileReader reader(commandMessage_);
 		std::string configDirPath = reader.value<std::string>("config_dir_path");
+		audioOutputDeviceIndex_ = reader.value<int>("audio_output_device_index");
 
 		model_.reset(new GS::TRMControlModel::Model());
 		model_->load(configDirPath.c_str(), TRM_CONTROL_MODEL_CONFIG_FILE);
@@ -144,7 +144,7 @@ SynthesizerController::speak()
 
 		std::string phoneticString = textParser_->parseText(commandMessage_.c_str());
 		modelController_->synthesizePhoneticString(*phoneticStringParser_, phoneticString.c_str(), trmParamStream_);
-		tube_->synthesizeToBuffer(trmParamStream_, outputBuffer_);
+		tube_->synthesizeToBuffer(trmParamStream_, audioBuffer_);
 	} catch (const std::exception& exc) {
 		std::ostringstream msg;
 		msg << "[SynthesizerController::speak] Could not synthesize the text. Reason: " << exc.what() << '.';
@@ -162,26 +162,27 @@ SynthesizerController::speak()
 	moduleController_.sendBeginEvent();
 
 	double sampleRate = tube_->outputRate();
-	unsigned int numChannels = tube_->numChannels();
+	numInputChannels_ = tube_->numChannels();
+	audioBufferIndex_ = 0;
 
 	try {
 		portaudio::System& sys = portaudio::System::instance();
-		portaudio::Device& dev = sys.defaultOutputDevice();
-		portaudio::DirectionSpecificStreamParameters outParams(dev, numChannels, portaudio::FLOAT32,
-							true /* interleaved */, dev.defaultHighOutputLatency(), nullptr);
+		if (audioOutputDeviceIndex_ >= sys.deviceCount()) {
+			std::cerr << "Invalid audio output device index: " << audioOutputDeviceIndex_ << " (should be < " << sys.deviceCount() << "). Using default." << std::endl;
+			audioOutputDeviceIndex_ = -1;
+		}
+		portaudio::Device& dev = (audioOutputDeviceIndex_ != -1) ?
+						sys.deviceByIndex(audioOutputDeviceIndex_) :
+						sys.defaultOutputDevice();
+		portaudio::DirectionSpecificStreamParameters outParams(dev, 2 /* channels */, portaudio::FLOAT32,
+							true /* interleaved */, dev.defaultLowOutputLatency(), nullptr);
 		portaudio::StreamParameters params(portaudio::DirectionSpecificStreamParameters::null(), outParams, sampleRate,
-							PORTAUDIO_FRAMES_PER_BUFFER, paClipOff);
-		portaudio::BlockingStream stream(params);
+							paFramesPerBufferUnspecified, paClipOff);
+		portaudio::MemFunCallbackStream<SynthesizerController> stream(params, *this, &SynthesizerController::portaudioCallback);
+
 		stream.start();
-
-		for (unsigned int frame = 0, totalNumFrames = outputBuffer_.size() / numChannels; frame < totalNumFrames; frame += AUDIO_BLOCK_SIZE) {
-
-			unsigned int endFrame = frame + AUDIO_BLOCK_SIZE;
-			if (endFrame > totalNumFrames) {
-				endFrame = totalNumFrames;
-			}
-
-			stream.write(&outputBuffer_[frame * numChannels], endFrame - frame);
+		while (stream.isActive()) {
+			sys.sleep(100 /* ms */);
 
 			unsigned int moduleControllerState = moduleController_.state;
 			if (moduleControllerState == ModuleController::STATE_STOP_REQUESTED) {
@@ -190,11 +191,50 @@ SynthesizerController::speak()
 				return;
 			}
 		}
-
 		stream.stop();
+
 	} catch (const std::exception& exc) {
 		std::cerr << "[SynthesizerController::speak][PortAudio] Caught exception: " << exc.what() << '.' << std::endl;
 	}
 
 	moduleController_.sendEndEvent();
+}
+
+int
+SynthesizerController::portaudioCallback(const void* /*inputBuffer*/, void* paOutputBuffer, unsigned long framesPerBuffer,
+			const PaStreamCallbackTimeInfo* /*timeInfo*/, PaStreamCallbackFlags /*statusFlags*/)
+{
+	float* out = static_cast<float*>(paOutputBuffer);
+	unsigned int numFrames = 0;
+	if (numInputChannels_ == 2) {
+		unsigned int framesAvailable = (audioBuffer_.size() - audioBufferIndex_) / 2;
+		numFrames = (framesAvailable > framesPerBuffer) ? framesPerBuffer : framesAvailable;
+		for (unsigned int i = 0; i < numFrames; ++i) {
+			unsigned int baseIndex = i * 2;
+			float* src = &audioBuffer_[audioBufferIndex_ + baseIndex];
+			out[baseIndex]     = *src;
+			out[baseIndex + 1] = *(src + 1);
+		}
+		audioBufferIndex_ += numFrames * 2;
+	} else { // 1 input channel
+		unsigned int framesAvailable = audioBuffer_.size() - audioBufferIndex_;
+		numFrames = (framesAvailable > framesPerBuffer) ? framesPerBuffer : framesAvailable;
+		for (unsigned int i = 0; i < numFrames; ++i) {
+			unsigned int baseIndex = i * 2;
+			float* src = &audioBuffer_[audioBufferIndex_ + i];
+			out[baseIndex]     = *src;
+			out[baseIndex + 1] = *src;
+		}
+		audioBufferIndex_ += numFrames;
+	}
+	for (unsigned int i = numFrames; i < framesPerBuffer; ++i) {
+		unsigned int baseIndex = i * 2;
+		out[baseIndex]     = 0;
+		out[baseIndex + 1] = 0;
+	}
+	if (audioBufferIndex_ == audioBuffer_.size()) {
+		return paComplete;
+	} else {
+		return paContinue;
+	}
 }

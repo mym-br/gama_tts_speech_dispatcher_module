@@ -15,9 +15,11 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.  *
  ***************************************************************************/
 
+#include <cstring>
+#include <iomanip>
 #include <iostream>
 
-#include "portaudiocpp/AutoSystem.hxx"
+#include "portaudiocpp/PortAudioCpp.hxx"
 
 #include "ModuleController.h"
 
@@ -26,8 +28,30 @@
 void
 showUsage(const char* progName)
 {
-	std::cerr << "Usage: " << progName << " <config. file path>" << std::endl;
+	std::cerr << "Usage:\n"
+			<< progName << " <config. file path>\n"
+			<< "        Run module.\n"
+			<< progName << " -o\n"
+			<< "        List audio output devices."
+			<< std::endl;
 }
+
+void
+showAudioOutputDevices()
+{
+	portaudio::System& sys = portaudio::System::instance();
+
+	std::cout << "Audio output devices:\n";
+
+	int i = 0;
+	for (auto iter = sys.devicesBegin(); iter != sys.devicesEnd(); ++iter, ++i) {
+		std::cout << std::setw(3) << i << ": " << '[' << iter->hostApi().name() << "] " << iter->name() << '\n';
+	}
+
+	std::cout << "Default output device: " << sys.defaultOutputDevice().index() << std::endl;
+}
+
+
 
 int
 main(int argc, char* argv[])
@@ -38,6 +62,11 @@ main(int argc, char* argv[])
 	}
 
 	portaudio::AutoSystem portaudio;
+
+	if (!std::strcmp(argv[1], "-o")) {
+		showAudioOutputDevices();
+		return 0;
+	}
 
 	ModuleController controller(std::cin, std::cout, argv[1]);
 	controller.exec();
