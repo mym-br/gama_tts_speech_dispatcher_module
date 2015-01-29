@@ -22,24 +22,46 @@
 namespace Util {
 
 void
-ignoreTags(std::string& msg)
+stripSSML(std::string& msg)
 {
-	std::string::size_type prevPos = 0;
-	std::string::size_type firstPos = 0;
-	while ( prevPos < msg.size() && (firstPos = msg.find('<', prevPos)) != std::string::npos ) {
-		if (firstPos == msg.size() - 1) {
-			return;
-		}
-		std::string::size_type lastPos = msg.find('>', firstPos + 1);
-		if (lastPos == std::string::npos) {
-			prevPos = firstPos + 1;
-		} else {
-			for (std::string::size_type i = firstPos; i <= lastPos; ++i) {
-				msg[i] = ' ';
+	std::string dest(msg.size(), ' ');
+
+	std::string::size_type pos = 0;
+	std::string::size_type destPos = 0;
+	const std::string::size_type size = msg.size();
+	while (pos < size) {
+		if (msg[pos] == '<') {
+			dest[destPos++] = ' ';
+			std::string::size_type findPos = msg.find('>', pos + 1);
+			if (findPos == std::string::npos) {
+				pos = size;
+			} else {
+				pos = findPos + 1;
 			}
-			prevPos = lastPos + 1;
+			continue;
+		} else if (msg[pos] == '&') {
+			const std::string::size_type nextPos = pos + 1;
+			if (msg.find("lt;", nextPos) == nextPos) {
+				dest[destPos++] = '<';
+				pos += 4;
+				continue;
+			}
+			if (msg.find("gt;", nextPos) == nextPos) {
+				dest[destPos++] = '>';
+				pos += 4;
+				continue;
+			}
+			if (msg.find("amp;", nextPos) == nextPos) {
+				dest[destPos++] = '&';
+				pos += 5;
+				continue;
+			}
 		}
+		dest[destPos++] = msg[pos++];
 	}
+
+	dest.resize(destPos);
+	msg.swap(dest);
 }
 
 std::pair<std::string, std::string>

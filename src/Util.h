@@ -26,7 +26,7 @@
 
 namespace Util {
 
-void ignoreTags(std::string& msg);
+void stripSSML(std::string& msg);
 std::pair<std::string, std::string> getNameAndValue(const std::string& s);
 void removeLF(std::string& msg);
 template<typename T> T convertString(const std::string& s);

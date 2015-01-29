@@ -161,12 +161,14 @@ ModuleController::handleSpeakCommand()
 	std::string line;
 	while (std::getline(in_, line)) {
 		if (line == ".") break;
-		out << ' ' << line;
+		if (out.tellp() != 0) {
+			out << ' ';
+		}
+		out << line;
 	}
 	std::string msg = out.str();
 
-	// Ignore SSML tags.
-	Util::ignoreTags(msg);
+	Util::stripSSML(msg);
 
 	state = STATE_SPEAKING;
 	setSynthCommand(COMMAND_SPEAK, msg);
