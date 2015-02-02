@@ -32,6 +32,7 @@
 #include "Util.h"
 
 #define TRM_CONTROL_MODEL_CONFIG_FILE "/monet.xml"
+#define FADE_OUT_TIME_MS 30.0
 
 
 
@@ -42,6 +43,9 @@ SynthesizerController::SynthesizerController(ModuleController& moduleController)
 		, audioBufferIndex_(0)
 		, numInputChannels_(0)
 		, audioOutputDeviceIndex_(-1)
+		, state_(STATE_STOPPED)
+		, fadeOutAmplitude_(1.0)
+		, fadeOutDelta_(0.0)
 {
 }
 
@@ -165,6 +169,9 @@ SynthesizerController::speak()
 	numInputChannels_ = tube_->numChannels();
 	audioBufferIndex_ = 0;
 
+	fadeOutAmplitude_ = 1.0;
+	fadeOutDelta_ = 1.0 / (FADE_OUT_TIME_MS * 1.0e-3 * sampleRate);
+
 	try {
 		portaudio::System& sys = portaudio::System::instance();
 		if (audioOutputDeviceIndex_ >= sys.deviceCount()) {
@@ -180,19 +187,25 @@ SynthesizerController::speak()
 							paFramesPerBufferUnspecified, paClipOff);
 		portaudio::MemFunCallbackStream<SynthesizerController> stream(params, *this, &SynthesizerController::portaudioCallback);
 
+		state_ = STATE_PLAYING;
+		bool stopping = false;
 		stream.start();
 		while (stream.isActive()) {
 			sys.sleep(100 /* ms */);
 
-			unsigned int moduleControllerState = moduleController_.state;
-			if (moduleControllerState == ModuleController::STATE_STOP_REQUESTED) {
-				stream.stop();
-				moduleController_.sendStopEvent();
-				return;
+			if (!stopping) {
+				unsigned int moduleControllerState = moduleController_.state;
+				if (moduleControllerState == ModuleController::STATE_STOP_REQUESTED) {
+					state_ = STATE_STOPPING;
+					stopping = true;
+				}
 			}
 		}
 		stream.stop();
-
+		if (stopping) {
+			moduleController_.sendStopEvent();
+			return;
+		}
 	} catch (const std::exception& exc) {
 		std::cerr << "[SynthesizerController::speak][PortAudio] Caught exception: " << exc.what() << '.' << std::endl;
 	}
@@ -206,24 +219,47 @@ SynthesizerController::portaudioCallback(const void* /*inputBuffer*/, void* paOu
 {
 	float* out = static_cast<float*>(paOutputBuffer);
 	unsigned int numFrames = 0;
+	unsigned int st = state_;
 	if (numInputChannels_ == 2) {
 		unsigned int framesAvailable = (audioBuffer_.size() - audioBufferIndex_) / 2;
 		numFrames = (framesAvailable > framesPerBuffer) ? framesPerBuffer : framesAvailable;
-		for (unsigned int i = 0; i < numFrames; ++i) {
-			unsigned int baseIndex = i * 2;
-			float* src = &audioBuffer_[audioBufferIndex_ + baseIndex];
-			out[baseIndex]     = *src;
-			out[baseIndex + 1] = *(src + 1);
+		if (st == STATE_STOPPING) {
+			for (unsigned int i = 0; i < numFrames; ++i) {
+				fadeOutAmplitude_ -= fadeOutDelta_;
+				if (fadeOutAmplitude_ < 0.0) fadeOutAmplitude_ = 0.0;
+				unsigned int baseIndex = i * 2;
+				float* src = &audioBuffer_[audioBufferIndex_ + baseIndex];
+				out[baseIndex]     = *src       * fadeOutAmplitude_;
+				out[baseIndex + 1] = *(src + 1) * fadeOutAmplitude_;
+			}
+		} else {
+			for (unsigned int i = 0; i < numFrames; ++i) {
+				unsigned int baseIndex = i * 2;
+				float* src = &audioBuffer_[audioBufferIndex_ + baseIndex];
+				out[baseIndex]     = *src;
+				out[baseIndex + 1] = *(src + 1);
+			}
 		}
 		audioBufferIndex_ += numFrames * 2;
 	} else { // 1 input channel
 		unsigned int framesAvailable = audioBuffer_.size() - audioBufferIndex_;
 		numFrames = (framesAvailable > framesPerBuffer) ? framesPerBuffer : framesAvailable;
-		for (unsigned int i = 0; i < numFrames; ++i) {
-			unsigned int baseIndex = i * 2;
-			float* src = &audioBuffer_[audioBufferIndex_ + i];
-			out[baseIndex]     = *src;
-			out[baseIndex + 1] = *src;
+		if (st == STATE_STOPPING) {
+			for (unsigned int i = 0; i < numFrames; ++i) {
+				fadeOutAmplitude_ -= fadeOutDelta_;
+				if (fadeOutAmplitude_ < 0.0) fadeOutAmplitude_ = 0.0;
+				unsigned int baseIndex = i * 2;
+				float value = audioBuffer_[audioBufferIndex_ + i] * fadeOutAmplitude_;
+				out[baseIndex]     = value;
+				out[baseIndex + 1] = value;
+			}
+		} else {
+			for (unsigned int i = 0; i < numFrames; ++i) {
+				unsigned int baseIndex = i * 2;
+				float value = audioBuffer_[audioBufferIndex_ + i];
+				out[baseIndex]     = value;
+				out[baseIndex + 1] = value;
+			}
 		}
 		audioBufferIndex_ += numFrames;
 	}
@@ -232,7 +268,12 @@ SynthesizerController::portaudioCallback(const void* /*inputBuffer*/, void* paOu
 		out[baseIndex]     = 0;
 		out[baseIndex + 1] = 0;
 	}
+	if (st == STATE_STOPPING && fadeOutAmplitude_ == 0.0) {
+		state_ = STATE_STOPPED;
+		return paComplete;
+	}
 	if (audioBufferIndex_ == audioBuffer_.size()) {
+		state_ = STATE_STOPPED;
 		return paComplete;
 	} else {
 		return paContinue;

@@ -18,6 +18,7 @@
 #ifndef SYNTHESIZER_CONTROLLER_H_
 #define SYNTHESIZER_CONTROLLER_H_
 
+#include <atomic>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -52,6 +53,12 @@ public:
 	void exec();
 	void wait();
 private:
+	enum State {
+		STATE_STOPPED,
+		STATE_PLAYING,
+		STATE_STOPPING
+	};
+
 	void init();
 	void set();
 	void speak();
@@ -80,6 +87,10 @@ private:
 	unsigned int audioBufferIndex_;
 	unsigned int numInputChannels_;
 	int audioOutputDeviceIndex_;
+
+	std::atomic_uint state_;
+	float fadeOutAmplitude_;
+	float fadeOutDelta_;
 };
 
 #endif /* SYNTHESIZER_CONTROLLER_H_ */
