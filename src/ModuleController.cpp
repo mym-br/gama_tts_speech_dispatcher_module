@@ -54,7 +54,7 @@ ModuleController::exec()
 			handleLogLevelCommand();
 		} else if (line == "SET") {
 			handleSetCommand();
-		} else if (line == "SPEAK") {
+		} else if (line == "SPEAK" || line == "CHAR" || line == "KEY" || line == "SOUND_ICON") {
 			handleSpeakCommand();
 		} else if (line == "STOP") {
 			handleStopCommand();
