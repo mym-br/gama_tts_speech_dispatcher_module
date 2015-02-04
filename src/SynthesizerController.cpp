@@ -125,6 +125,17 @@ SynthesizerController::set()
 	GS::TRMControlModel::Configuration& trmModelConfig = modelController_->trmControlModelConfig();
 	trmModelConfig.pitchOffset = defaultPitchOffset_ + moduleConfig_.pitch / 5.0;
 	trmModelConfig.tempo = std::pow(10.0, moduleConfig_.rate / 100.0);
+	if (moduleConfig_.voice == "female1") {
+		trmModelConfig.voiceType = 1; // Female
+	} else if (moduleConfig_.voice == "male2") {
+		trmModelConfig.voiceType = 2; // LgChild
+	} else if (moduleConfig_.voice == "child_male") {
+		trmModelConfig.voiceType = 3; // SmChild
+	} else if (moduleConfig_.voice == "child_female") {
+		trmModelConfig.voiceType = 4; // Baby
+	} else { // male1 and others
+		trmModelConfig.voiceType = 0; // Male
+	}
 
 	GS::TRM::Configuration& trmConfig = modelController_->trmConfig();
 	trmConfig.volume = (moduleConfig_.volume < 0.0) ? (60.0 * (1.0 + moduleConfig_.volume / 100.0)) : 60.0;
