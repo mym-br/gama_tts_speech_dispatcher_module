@@ -23,16 +23,19 @@
 
 #include "ModuleController.h"
 
+#define PROGRAM_VERSION "0.1.0"
+
 
 
 void
 showUsage(const char* progName)
 {
+	std::cerr << "\nSD-Gnuspeech " << PROGRAM_VERSION << "\n\n";
 	std::cerr << "Usage:\n"
 			<< progName << " <config. file path>\n"
 			<< "        Run module.\n"
 			<< progName << " -o\n"
-			<< "        List audio output devices."
+			<< "        List audio output devices.\n"
 			<< std::endl;
 }
 
