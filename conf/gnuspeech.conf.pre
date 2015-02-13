@@ -1,5 +1,5 @@
 
-config_dir_path = ../gnuspeech_sa/data
+config_dir_path = @CMAKE_INSTALL_PREFIX@/share/gnuspeech/gnuspeechsa/data/en
 
 # Execute "sd_gnuspeech -o" to get the list of devices.
 # -1: use default
