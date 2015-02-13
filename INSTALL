@@ -5,14 +5,11 @@
     The following compiler has been tested:
     - GCC 4.8.2 (GNU/Linux x86_64).
 
-  - Gnuspeech-SA.
-
   - PortAudio with C++ binding (tested with version v19_20140130).
 
   - Speech Dispatcher (tested with version 0.8.1).
 
-- Build Gnuspeech-SA, with source directory at ../gnuspeech_sa and
-  build directory at ../gnuspeech_sa-build.
+  - Gnuspeech-SA (tested with version 0.1.0).
 
 - Build (GNU/Linux):
 
@@ -21,16 +18,25 @@
   cmake -D CMAKE_BUILD_TYPE=Release ../sd_gnuspeech
   make
 
-- Set the absolute path of the configuration directory
-  in conf/gnuspeech.conf.
+  # Optional:
+  make install
 
 - Add the following line to ~/.config/speech-dispatcher/speechd.conf
   or /etc/speech-dispatcher/speechd.conf:
 
-  AddModule "gnuspeech" "<absolute_path_to>/sd_gnuspeech" "<absolute_path_to>/gnuspeech.conf"
+  AddModule "gnuspeech" "sd_gnuspeech" "gnuspeech.conf"
 
-  (
-    - Fill <absolute_path_to>.
-    - Don't forget to uncomment the line:
-        AddModule "dummy"         "sd_dummy"      ""
-  )
+  - Don't forget to uncomment the line:
+
+    AddModule "dummy"         "sd_dummy"      ""
+
+- If the file ~/.config/speech-dispatcher/speechd.conf exists:
+
+  mkdir -p ~/.config/speech-dispatcher/modules/
+  cp /etc/speech-dispatcher/modules/gnuspeech.conf ~/.config/speech-dispatcher/modules/
+
+- Test:
+
+  spd-say -O
+
+  spd-say -o gnuspeech 'hello world'
