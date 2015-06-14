@@ -9,20 +9,28 @@
 
   - Speech Dispatcher (tested with version 0.8.1).
 
-  - Gnuspeech-SA (tested with version 0.1.0).
+  - Gnuspeech-SA (tested with version 0.1.1).
 
 - Build (GNU/Linux):
 
+  pkg_dir=$PWD
   mkdir ../sd_gnuspeech-build
   cd ../sd_gnuspeech-build
-  cmake -D CMAKE_BUILD_TYPE=Release ../sd_gnuspeech
+
+  cmake -D CMAKE_INSTALL_PREFIX=/usr -D CMAKE_BUILD_TYPE=Release $pkg_dir
+  # or
+  cmake -D CMAKE_INSTALL_PREFIX=/usr -D CMAKE_BUILD_TYPE=Release -D LIB_DIR_SUFFIX=64 $pkg_dir
+
   make
 
-  # Optional:
+- Install (GNU/Linux):
+
+  # Execute as root:
   make install
 
-- Add the following line to ~/.config/speech-dispatcher/speechd.conf
-  or /etc/speech-dispatcher/speechd.conf:
+- Add the following line to /etc/speech-dispatcher/speechd.conf
+  or ~/.config/speech-dispatcher/speechd.conf (if it doesn't exist,
+  copy the other file):
 
   AddModule "gnuspeech" "sd_gnuspeech" "gnuspeech.conf"
 
@@ -34,6 +42,13 @@
 
   mkdir -p ~/.config/speech-dispatcher/modules/
   cp /etc/speech-dispatcher/modules/gnuspeech.conf ~/.config/speech-dispatcher/modules/
+
+- Edit the file gnuspeech.conf if necessary. The variable config_dir_path must
+  be set to the path to the Gnuspeech-SA's data.
+
+- Restart speech-dispatcher:
+
+  killall speech-dispatcher
 
 - Test:
 
