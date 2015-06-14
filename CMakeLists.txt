@@ -1,10 +1,13 @@
 project(sd_gnuspeech)
 cmake_minimum_required(VERSION 2.8)
 
-set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Wextra -march=native")
-
-#aux_source_directory(. SRC_LIST)
-#add_executable(${PROJECT_NAME} ${SRC_LIST})
+if(UNIX)
+    if(APPLE)
+        set(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++")
+    else()
+        set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Wextra -march=native")
+    endif()
+endif()
 
 find_package(PkgConfig)
 
@@ -32,10 +35,10 @@ if(LOCAL_GNUSPEECH_SA)
         ${PORTAUDIOCPP_LIBRARY_DIRS}
     )
     target_link_libraries(sd_gnuspeech
-        -l:../gnuspeech_sa-build/libgnuspeechsa.so
+        -L../gnuspeech_sa-build -lgnuspeechsa
         ${PORTAUDIOCPP_LIBRARIES}
     )
-else(LOCAL_GNUSPEECH_SA)
+else()
     message(STATUS "Using system Gnuspeech-SA")
     pkg_check_modules(SYSTEM_GNUSPEECH_SA gnuspeechsa)
     include_directories(
@@ -51,13 +54,12 @@ else(LOCAL_GNUSPEECH_SA)
         ${SYSTEM_GNUSPEECH_SA_LIBRARIES}
         ${PORTAUDIOCPP_LIBRARIES}
     )
-endif(LOCAL_GNUSPEECH_SA)
+endif()
 
-if(UNIX)
-    include(GNUInstallDirs)
+if(UNIX AND NOT APPLE)
     install(TARGETS sd_gnuspeech
-        RUNTIME DESTINATION ${CMAKE_INSTALL_LIBDIR}/speech-dispatcher-modules/)
+        RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/lib${LIB_DIR_SUFFIX}/speech-dispatcher-modules/)
     configure_file(conf/gnuspeech.conf.pre gnuspeech.conf @ONLY)
     install(FILES ${CMAKE_BINARY_DIR}/gnuspeech.conf DESTINATION /etc/speech-dispatcher/modules/)
     install(FILES ${CMAKE_BINARY_DIR}/gnuspeech.conf DESTINATION ${CMAKE_INSTALL_PREFIX}/share/speech-dispatcher/conf/modules/)
-endif(UNIX)
+endif()
