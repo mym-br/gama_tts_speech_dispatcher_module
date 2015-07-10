@@ -97,10 +97,13 @@ SynthesizerController::init()
 		model_->load(configDirPath.c_str(), TRM_CONTROL_MODEL_CONFIG_FILE);
 
 		modelController_.reset(new GS::TRMControlModel::Controller(configDirPath.c_str(), *model_));
-		GS::TRMControlModel::Configuration& trmModelConfig = modelController_->trmControlModelConfig();
-		defaultPitchOffset_ = trmModelConfig.pitchOffset;
+		const GS::TRMControlModel::Configuration& trmControlConfig = modelController_->trmControlModelConfiguration();
+		defaultPitchOffset_ = trmControlConfig.pitchOffset;
 
-		textParser_.reset(new GS::En::TextParser(configDirPath.c_str()));
+		textParser_.reset(new GS::En::TextParser(configDirPath.c_str(),
+								trmControlConfig.dictionary1File,
+								trmControlConfig.dictionary2File,
+								trmControlConfig.dictionary3File));
 		phoneticStringParser_.reset(new GS::En::PhoneticStringParser(configDirPath.c_str(), *modelController_));
 
 		tube_.reset(new GS::TRM::Tube);
@@ -122,9 +125,9 @@ SynthesizerController::set()
 {
 	moduleController_.getConfigCopy(moduleConfig_);
 
-	GS::TRMControlModel::Configuration& trmModelConfig = modelController_->trmControlModelConfig();
-	trmModelConfig.pitchOffset = defaultPitchOffset_ + moduleConfig_.pitch / 5.0;
-	trmModelConfig.tempo = std::pow(10.0, moduleConfig_.rate / 100.0);
+	GS::TRMControlModel::Configuration& trmControlConfig = modelController_->trmControlModelConfiguration();
+	trmControlConfig.pitchOffset = defaultPitchOffset_ + moduleConfig_.pitch / 5.0;
+	trmControlConfig.tempo = std::pow(10.0, moduleConfig_.rate / 100.0);
 //	if (moduleConfig_.voice == "female1") {
 //	} else if (moduleConfig_.voice == "male2") {
 //	} else if (moduleConfig_.voice == "child_male") {
@@ -132,7 +135,7 @@ SynthesizerController::set()
 //	} else { // male1 and others
 //	}
 
-	GS::TRM::Configuration& trmConfig = modelController_->trmConfig();
+	GS::TRM::Configuration& trmConfig = modelController_->trmConfiguration();
 	trmConfig.volume = (moduleConfig_.volume < 0.0) ? (60.0 * (1.0 + moduleConfig_.volume / 100.0)) : 60.0;
 }
 
