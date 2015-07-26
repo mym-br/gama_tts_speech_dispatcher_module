@@ -1,4 +1,4 @@
-project(sd_gnuspeech)
+project(GnuspeechSASpeechDispatcherModule)
 cmake_minimum_required(VERSION 2.8)
 
 if(UNIX)
@@ -21,25 +21,25 @@ add_executable(sd_gnuspeech
 
 pkg_check_modules(PORTAUDIOCPP portaudiocpp)
 
-find_file(LOCAL_GNUSPEECH_SA CMakeLists.txt PATHS ${CMAKE_BINARY_DIR}/../gnuspeech_sa/ NO_DEFAULT_PATH)
+find_file(LOCAL_GNUSPEECH_SA CMakeLists.txt PATHS ${CMAKE_BINARY_DIR}/../GnuspeechSA/ NO_DEFAULT_PATH)
 if(LOCAL_GNUSPEECH_SA)
-    message(STATUS "Using local Gnuspeech-SA")
+    message(STATUS "Using local GnuspeechSA")
     include_directories(
         src
-        ../gnuspeech_sa/src
-        ../gnuspeech_sa/src/trm
-        ../gnuspeech_sa/src/trm_control_model
+        ../GnuspeechSA/src
+        ../GnuspeechSA/src/trm
+        ../GnuspeechSA/src/trm_control_model
         ${PORTAUDIOCPP_INCLUDE_DIRS}
     )
     link_directories(
         ${PORTAUDIOCPP_LIBRARY_DIRS}
     )
     target_link_libraries(sd_gnuspeech
-        -L../gnuspeech_sa-build -lgnuspeechsa
+        -L../GnuspeechSA-build -lgnuspeechsa
         ${PORTAUDIOCPP_LIBRARIES}
     )
 else()
-    message(STATUS "Using system Gnuspeech-SA")
+    message(STATUS "Using system GnuspeechSA")
     pkg_check_modules(SYSTEM_GNUSPEECH_SA gnuspeechsa)
     include_directories(
         src

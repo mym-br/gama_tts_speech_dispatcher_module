@@ -9,13 +9,13 @@
 
   - Speech Dispatcher (tested with version 0.8.1).
 
-  - Gnuspeech-SA (use the latest version).
+  - GnuspeechSA (use the latest version).
 
 - Build (GNU/Linux):
 
   pkg_dir=$PWD
-  mkdir ../sd_gnuspeech-build
-  cd ../sd_gnuspeech-build
+  mkdir ../GnuspeechSASpeechDispatcherModule-build
+  cd ../GnuspeechSASpeechDispatcherModule-build
 
   cmake -D CMAKE_INSTALL_PREFIX=/usr -D CMAKE_BUILD_TYPE=Release $pkg_dir
   # or
@@ -44,7 +44,7 @@
   cp /etc/speech-dispatcher/modules/gnuspeech.conf ~/.config/speech-dispatcher/modules/
 
 - Edit the file gnuspeech.conf if necessary. The variable config_dir_path must
-  be set to the path to the Gnuspeech-SA's data.
+  be set to the path to GnuspeechSA's data.
 
 - Restart speech-dispatcher:
 
