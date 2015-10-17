@@ -23,7 +23,7 @@
 
 #include "ModuleController.h"
 
-#define PROGRAM_VERSION "0.1.3"
+#define PROGRAM_VERSION "0.1.4"
 
 
 
