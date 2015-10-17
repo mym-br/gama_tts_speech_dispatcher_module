@@ -1,0 +1,6 @@
+
+config_dir_path = @CMAKE_INSTALL_PREFIX@/share/gama_tts/data/en
+
+# Execute "sd_gama_tts -o" to get the list of devices.
+# -1: use default
+audio_output_device_index = -1

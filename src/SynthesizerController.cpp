@@ -31,7 +31,7 @@
 #include "Tube.h"
 #include "Util.h"
 
-#define TRM_CONTROL_MODEL_CONFIG_FILE "/monet.xml"
+#define TRM_CONTROL_MODEL_CONFIG_FILE "/artic.xml"
 #define FADE_OUT_TIME_MS 30.0
 
 

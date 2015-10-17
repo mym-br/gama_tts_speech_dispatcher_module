@@ -1,4 +1,4 @@
-project(GnuspeechSASpeechDispatcherModule)
+project(gama_tts_speech_dispatcher_module)
 cmake_minimum_required(VERSION 2.8)
 
 if(UNIX)
@@ -11,7 +11,7 @@ endif()
 
 find_package(PkgConfig)
 
-add_executable(sd_gnuspeech
+add_executable(sd_gama_tts
     src/main.cpp
     src/ModuleConfiguration.cpp src/ModuleConfiguration.h
     src/ModuleController.cpp src/ModuleController.h
@@ -21,45 +21,45 @@ add_executable(sd_gnuspeech
 
 pkg_check_modules(PORTAUDIOCPP portaudiocpp)
 
-find_file(LOCAL_GNUSPEECH_SA CMakeLists.txt PATHS ${CMAKE_BINARY_DIR}/../GnuspeechSA/ NO_DEFAULT_PATH)
-if(LOCAL_GNUSPEECH_SA)
-    message(STATUS "Using local GnuspeechSA")
+find_file(LOCAL_GAMA_TTS CMakeLists.txt PATHS ${CMAKE_BINARY_DIR}/../gama_tts/ NO_DEFAULT_PATH)
+if(LOCAL_GAMA_TTS)
+    message(STATUS "Using local GamaTTS")
     include_directories(
         src
-        ../GnuspeechSA/src
-        ../GnuspeechSA/src/trm
-        ../GnuspeechSA/src/trm_control_model
+        ../gama_tts/src
+        ../gama_tts/src/trm
+        ../gama_tts/src/trm_control_model
         ${PORTAUDIOCPP_INCLUDE_DIRS}
     )
     link_directories(
         ${PORTAUDIOCPP_LIBRARY_DIRS}
     )
-    target_link_libraries(sd_gnuspeech
-        -L../GnuspeechSA-build -lgnuspeechsa
+    target_link_libraries(sd_gama_tts
+        -L../gama_tts-build -lgamatts
         ${PORTAUDIOCPP_LIBRARIES}
     )
 else()
-    message(STATUS "Using system GnuspeechSA")
-    pkg_check_modules(SYSTEM_GNUSPEECH_SA gnuspeechsa)
+    message(STATUS "Using system GamaTTS")
+    pkg_check_modules(SYSTEM_GAMA_TTS gama_tts)
     include_directories(
         src
-        ${SYSTEM_GNUSPEECH_SA_INCLUDE_DIRS}
+        ${SYSTEM_GAMA_TTS_INCLUDE_DIRS}
         ${PORTAUDIOCPP_INCLUDE_DIRS}
     )
     link_directories(
-        ${SYSTEM_GNUSPEECH_SA_LIBRARY_DIRS}
+        ${SYSTEM_GAMA_TTS_LIBRARY_DIRS}
         ${PORTAUDIOCPP_LIBRARY_DIRS}
     )
-    target_link_libraries(sd_gnuspeech
-        ${SYSTEM_GNUSPEECH_SA_LIBRARIES}
+    target_link_libraries(sd_gama_tts
+        ${SYSTEM_GAMA_TTS_LIBRARIES}
         ${PORTAUDIOCPP_LIBRARIES}
     )
 endif()
 
 if(UNIX AND NOT APPLE)
-    install(TARGETS sd_gnuspeech
+    install(TARGETS sd_gama_tts
         RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/lib${LIB_DIR_SUFFIX}/speech-dispatcher-modules/)
-    configure_file(conf/gnuspeech.conf.pre gnuspeech.conf @ONLY)
-    install(FILES ${CMAKE_BINARY_DIR}/gnuspeech.conf DESTINATION /etc/speech-dispatcher/modules/)
-    install(FILES ${CMAKE_BINARY_DIR}/gnuspeech.conf DESTINATION ${CMAKE_INSTALL_PREFIX}/share/speech-dispatcher/conf/modules/)
+    configure_file(conf/gama_tts.conf.pre gama_tts.conf @ONLY)
+    install(FILES ${CMAKE_BINARY_DIR}/gama_tts.conf DESTINATION /etc/speech-dispatcher/modules/)
+    install(FILES ${CMAKE_BINARY_DIR}/gama_tts.conf DESTINATION ${CMAKE_INSTALL_PREFIX}/share/speech-dispatcher/conf/modules/)
 endif()

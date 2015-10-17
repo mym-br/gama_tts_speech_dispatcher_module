@@ -242,12 +242,12 @@ ModuleController::setSynthCommandResult(CommandType type, bool failed, const std
 		if (failed) {
 			std::ostringstream stream;
 			stream <<
-				"399-Gnuspeech: " << msg << '\n' <<
+				"399-GamaTTS: " << msg << '\n' <<
 				"399 ERR CANT INIT MODULE";
 			sendResponse(stream.str().c_str());
 		} else {
 			sendResponse(
-				"299-Gnuspeech: Initialized successfully.\n"
+				"299-GamaTTS: Initialized successfully.\n"
 				"299 OK LOADED SUCCESSFULLY");
 		}
 		break;

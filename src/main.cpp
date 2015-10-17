@@ -30,7 +30,7 @@
 void
 showUsage(const char* progName)
 {
-	std::cerr << "\nGnuspeechSA module " << PROGRAM_VERSION << " for Speech Dispatcher.\n\n";
+	std::cerr << "\nGamaTTS module " << PROGRAM_VERSION << " for Speech Dispatcher.\n\n";
 	std::cerr << "Usage:\n"
 			<< progName << " <config. file path>\n"
 			<< "        Run module.\n"

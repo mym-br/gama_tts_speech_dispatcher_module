@@ -3,19 +3,19 @@
 
   - A C++ compiler with C++11 support.
     The following compiler has been tested:
-    - GCC 4.8.2 (GNU/Linux x86_64).
+    - GCC 4.8.2 (Linux x86_64).
 
   - PortAudio with C++ binding (tested with version v19_20140130).
 
   - Speech Dispatcher (tested with version 0.8.1).
 
-  - GnuspeechSA (use the latest version).
+  - GamaTTS (use the latest version).
 
-- Build (GNU/Linux):
+- Build (Linux):
 
   pkg_dir=$PWD
-  mkdir ../GnuspeechSASpeechDispatcherModule-build
-  cd ../GnuspeechSASpeechDispatcherModule-build
+  mkdir ../gama_tts_speech_dispatcher_module-build
+  cd ../gama_tts_speech_dispatcher_module-build
 
   cmake -D CMAKE_INSTALL_PREFIX=/usr -D CMAKE_BUILD_TYPE=Release $pkg_dir
   # or
@@ -23,7 +23,7 @@
 
   make
 
-- Install (GNU/Linux):
+- Install (Linux):
 
   # Execute as root:
   make install
@@ -32,7 +32,7 @@
   or ~/.config/speech-dispatcher/speechd.conf (if it doesn't exist,
   copy the other file):
 
-  AddModule "gnuspeech" "sd_gnuspeech" "gnuspeech.conf"
+  AddModule "gama_tts" "sd_gama_tts" "gama_tts.conf"
 
   - Don't forget to uncomment the line:
 
@@ -41,10 +41,10 @@
 - If the file ~/.config/speech-dispatcher/speechd.conf exists:
 
   mkdir -p ~/.config/speech-dispatcher/modules/
-  cp /etc/speech-dispatcher/modules/gnuspeech.conf ~/.config/speech-dispatcher/modules/
+  cp /etc/speech-dispatcher/modules/gama_tts.conf ~/.config/speech-dispatcher/modules/
 
-- Edit the file gnuspeech.conf if necessary. The variable config_dir_path must
-  be set to the path to GnuspeechSA's data.
+- Edit the file gama_tts.conf if necessary. The variable config_dir_path must
+  be set to the path to GamaTTS's data.
 
 - Restart speech-dispatcher:
 
@@ -54,4 +54,4 @@
 
   spd-say -O
 
-  spd-say -o gnuspeech 'hello world'
+  spd-say -o gama_tts 'hello world'
