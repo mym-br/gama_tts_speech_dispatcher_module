@@ -3,7 +3,7 @@
 
   - A C++ compiler with C++11 support.
     The following compiler has been tested:
-    - GCC 4.8.2 (Linux x86_64).
+    - GCC 5.3 (Linux x86_64).
 
   - PortAudio with C++ binding (tested with version v19_20140130).
 
