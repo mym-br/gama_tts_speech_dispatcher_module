@@ -1,13 +1,13 @@
 
 - Requirements:
 
-  - A C++ compiler with C++11 support.
+  - A C++ compiler with C++14 support.
     The following compiler has been tested:
-    - GCC 5.3 (Linux x86_64).
+    - GCC 5.4 (Linux x86_64).
 
   - PortAudio with C++ binding (tested with version v19_20140130).
 
-  - Speech Dispatcher (tested with version 0.8.1).
+  - Speech Dispatcher (tested with version 0.8.6).
 
   - GamaTTS (use the latest version).
 
@@ -28,9 +28,7 @@
   # Execute as root:
   make install
 
-- Add the following line to /etc/speech-dispatcher/speechd.conf
-  or ~/.config/speech-dispatcher/speechd.conf (if it doesn't exist,
-  copy the other file):
+- Add the following line to /etc/speech-dispatcher/speechd.conf:
 
   AddModule "gama_tts" "sd_gama_tts" "gama_tts.conf"
 
@@ -38,17 +36,8 @@
 
     AddModule "dummy"         "sd_dummy"      ""
 
-- If the file ~/.config/speech-dispatcher/speechd.conf exists:
-
-  mkdir -p ~/.config/speech-dispatcher/modules/
-  cp /etc/speech-dispatcher/modules/gama_tts.conf ~/.config/speech-dispatcher/modules/
-
-- Edit the file gama_tts.conf if necessary. The variable config_dir_path must
-  be set to the path to GamaTTS's data.
-
-- Restart speech-dispatcher:
-
-  killall speech-dispatcher
+- Edit the file /etc/speech-dispatcher/modules/gama_tts.conf if necessary.
+  The parameter config_dir_path must be set to the path to GamaTTS's data.
 
 - Test:
 

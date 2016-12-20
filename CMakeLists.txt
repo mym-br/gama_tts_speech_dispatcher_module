@@ -3,9 +3,9 @@ cmake_minimum_required(VERSION 2.8)
 
 if(UNIX)
     if(APPLE)
-        set(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++")
+        set(CMAKE_CXX_FLAGS "-std=c++14 -stdlib=libc++")
     else()
-        set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Wextra -march=native")
+        set(CMAKE_CXX_FLAGS "-std=c++14 -Wall -Wextra -march=native")
     endif()
 endif()
 
@@ -27,8 +27,8 @@ if(LOCAL_GAMA_TTS)
     include_directories(
         src
         ../gama_tts/src
-        ../gama_tts/src/trm
-        ../gama_tts/src/trm_control_model
+        ../gama_tts/src/vtm
+        ../gama_tts/src/vtm_control_model
         ${PORTAUDIOCPP_INCLUDE_DIRS}
     )
     link_directories(
@@ -61,5 +61,4 @@ if(UNIX AND NOT APPLE)
         RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/lib${LIB_DIR_SUFFIX}/speech-dispatcher-modules/)
     configure_file(conf/gama_tts.conf.pre gama_tts.conf @ONLY)
     install(FILES ${CMAKE_BINARY_DIR}/gama_tts.conf DESTINATION /etc/speech-dispatcher/modules/)
-    install(FILES ${CMAKE_BINARY_DIR}/gama_tts.conf DESTINATION ${CMAKE_INSTALL_PREFIX}/share/speech-dispatcher/conf/modules/)
 endif()

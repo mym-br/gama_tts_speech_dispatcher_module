@@ -27,13 +27,13 @@
 
 
 ModuleController::ModuleController(std::istream& in, std::ostream& out, const char* configFilePath)
-		: state(STATE_IDLE)
-		, in_(in)
-		, out_(out)
-		, configFilePath_(configFilePath)
-		, newCommand_(false)
-		, commandType_(COMMAND_NONE)
-		, synthController_(new SynthesizerController(*this))
+		: state {STATE_IDLE}
+		, in_ {in}
+		, out_ {out}
+		, configFilePath_ {configFilePath}
+		, newCommand_ {false}
+		, commandType_ {COMMAND_NONE}
+		, synthController_ {std::make_unique<SynthesizerController>(*this)}
 {
 }
 

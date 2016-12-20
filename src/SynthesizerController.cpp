@@ -23,15 +23,16 @@
 #include <cstring>
 #include <string>
 
+#include "ConfigurationData.h"
 #include "Controller.h"
 #include "en/phonetic_string_parser/PhoneticStringParser.h"
 #include "en/text_parser/TextParser.h"
-#include "KeyValueFileReader.h"
 #include "Model.h"
-#include "Tube.h"
 #include "Util.h"
+#include "VocalTractModel.h"
 
-#define TRM_CONTROL_MODEL_CONFIG_FILE "/artic.xml"
+#define VTM_CONTROL_MODEL_CONFIG_FILE "/artic.xml"
+#define VTM_CONFIG_FILE_NAME "/vtm.config"
 #define FADE_OUT_TIME_MS 30.0
 
 
@@ -89,24 +90,34 @@ void
 SynthesizerController::init()
 {
 	try {
-		GS::KeyValueFileReader reader(commandMessage_);
-		std::string configDirPath = reader.value<std::string>("config_dir_path");
-		audioOutputDeviceIndex_ = reader.value<int>("audio_output_device_index");
+		GS::ConfigurationData data(commandMessage_);
+		const std::string configDirPath = data.value<std::string>("config_dir_path");
+		const std::string voiceFile = data.value<std::string>("voice_file");
+		audioOutputDeviceIndex_ = data.value<int>("audio_output_device_index");
 
-		model_.reset(new GS::TRMControlModel::Model());
-		model_->load(configDirPath.c_str(), TRM_CONTROL_MODEL_CONFIG_FILE);
+		model_ = std::make_unique<GS::VTMControlModel::Model>();
+		model_->load(configDirPath.c_str(), VTM_CONTROL_MODEL_CONFIG_FILE);
 
-		modelController_.reset(new GS::TRMControlModel::Controller(configDirPath.c_str(), *model_));
-		const GS::TRMControlModel::Configuration& trmControlConfig = modelController_->trmControlModelConfiguration();
-		defaultPitchOffset_ = trmControlConfig.pitchOffset;
+		modelController_ = std::make_unique<GS::VTMControlModel::Controller>(configDirPath.c_str(), *model_);
+		const GS::VTMControlModel::Configuration& vtmControlConfig = modelController_->vtmControlModelConfiguration();
+		defaultPitchOffset_ = vtmControlConfig.pitchOffset;
 
-		textParser_.reset(new GS::En::TextParser(configDirPath.c_str(),
-								trmControlConfig.dictionary1File,
-								trmControlConfig.dictionary2File,
-								trmControlConfig.dictionary3File));
-		phoneticStringParser_.reset(new GS::En::PhoneticStringParser(configDirPath.c_str(), *modelController_));
+		textParser_ = std::make_unique<GS::En::TextParser>(configDirPath.c_str(),
+								vtmControlConfig.dictionary1File,
+								vtmControlConfig.dictionary2File,
+								vtmControlConfig.dictionary3File);
+		phoneticStringParser_ = std::make_unique<GS::En::PhoneticStringParser>(configDirPath.c_str(), *modelController_);
 
-		tube_.reset(new GS::TRM::Tube);
+		std::ostringstream vtmConfigFilePath;
+		vtmConfigFilePath << configDirPath << VTM_CONFIG_FILE_NAME;
+
+		std::ostringstream voiceFilePath;
+		voiceFilePath << configDirPath << '/' << voiceFile;
+
+		GS::ConfigurationData vtmData(voiceFilePath.str());
+		vtmData.insert(GS::ConfigurationData(vtmConfigFilePath.str()));
+
+		vocalTractModel_ = GS::VTM::VocalTractModel::getInstance(vtmData);
 	} catch (const std::exception& exc) {
 		std::ostringstream msg;
 		msg << "[SynthesizerController::init] Could not initialize the synthesis controller. Reason: " << exc.what() << '.';
@@ -125,18 +136,15 @@ SynthesizerController::set()
 {
 	moduleController_.getConfigCopy(moduleConfig_);
 
-	GS::TRMControlModel::Configuration& trmControlConfig = modelController_->trmControlModelConfiguration();
-	trmControlConfig.pitchOffset = defaultPitchOffset_ + moduleConfig_.pitch / 5.0;
-	trmControlConfig.tempo = std::pow(10.0, moduleConfig_.rate / 100.0);
+	GS::VTMControlModel::Configuration& vtmControlConfig = modelController_->vtmControlModelConfiguration();
+	vtmControlConfig.pitchOffset = defaultPitchOffset_ + moduleConfig_.pitch / 5.0;
+	vtmControlConfig.tempo = std::pow(10.0, moduleConfig_.rate / 100.0);
 //	if (moduleConfig_.voice == "female1") {
 //	} else if (moduleConfig_.voice == "male2") {
 //	} else if (moduleConfig_.voice == "child_male") {
 //	} else if (moduleConfig_.voice == "child_female") {
 //	} else { // male1 and others
 //	}
-
-	GS::TRM::Configuration& trmConfig = modelController_->trmConfiguration();
-	trmConfig.volume = (moduleConfig_.volume < 0.0) ? (60.0 * (1.0 + moduleConfig_.volume / 100.0)) : 60.0;
 }
 
 void
@@ -152,12 +160,12 @@ SynthesizerController::speak()
 
 	try {
 		// Reset the stream.
-		trmParamStream_.str("");
-		trmParamStream_.clear();
+		vtmParamStream_.str("");
+		vtmParamStream_.clear();
 
 		std::string phoneticString = textParser_->parseText(commandMessage_.c_str());
-		modelController_->synthesizePhoneticString(*phoneticStringParser_, phoneticString.c_str(), trmParamStream_);
-		tube_->synthesizeToBuffer(trmParamStream_, audioBuffer_);
+		modelController_->synthesizePhoneticString(*phoneticStringParser_, phoneticString.c_str(), vtmParamStream_);
+		vocalTractModel_->synthesizeToBuffer(vtmParamStream_, audioBuffer_);
 	} catch (const std::exception& exc) {
 		std::ostringstream msg;
 		msg << "[SynthesizerController::speak] Could not synthesize the text. Reason: " << exc.what() << '.';
@@ -174,8 +182,7 @@ SynthesizerController::speak()
 
 	moduleController_.sendBeginEvent();
 
-	double sampleRate = tube_->outputRate();
-	numInputChannels_ = tube_->numChannels();
+	const double sampleRate = vocalTractModel_->outputRate();
 	audioBufferIndex_ = 0;
 
 	fadeOutAmplitude_ = 1.0;
@@ -227,53 +234,31 @@ SynthesizerController::portaudioCallback(const void* /*inputBuffer*/, void* paOu
 			const PaStreamCallbackTimeInfo* /*timeInfo*/, PaStreamCallbackFlags /*statusFlags*/)
 {
 	float* out = static_cast<float*>(paOutputBuffer);
-	unsigned int numFrames = 0;
-	unsigned int st = state_;
-	if (numInputChannels_ == 2) {
-		unsigned int framesAvailable = (audioBuffer_.size() - audioBufferIndex_) / 2;
-		numFrames = (framesAvailable > framesPerBuffer) ? framesPerBuffer : framesAvailable;
-		if (st == STATE_STOPPING) {
-			for (unsigned int i = 0; i < numFrames; ++i) {
-				fadeOutAmplitude_ -= fadeOutDelta_;
-				if (fadeOutAmplitude_ < 0.0) fadeOutAmplitude_ = 0.0;
-				unsigned int baseIndex = i * 2;
-				float* src = &audioBuffer_[audioBufferIndex_ + baseIndex];
-				out[baseIndex]     = *src       * fadeOutAmplitude_;
-				out[baseIndex + 1] = *(src + 1) * fadeOutAmplitude_;
-			}
-		} else {
-			for (unsigned int i = 0; i < numFrames; ++i) {
-				unsigned int baseIndex = i * 2;
-				float* src = &audioBuffer_[audioBufferIndex_ + baseIndex];
-				out[baseIndex]     = *src;
-				out[baseIndex + 1] = *(src + 1);
-			}
+	const unsigned int st = state_;
+
+	const unsigned int framesAvailable = audioBuffer_.size() - audioBufferIndex_;
+	const unsigned int numFrames = (framesAvailable > framesPerBuffer) ? framesPerBuffer : framesAvailable;
+	if (st == STATE_STOPPING) {
+		for (unsigned int i = 0; i < numFrames; ++i) {
+			fadeOutAmplitude_ -= fadeOutDelta_;
+			if (fadeOutAmplitude_ < 0.0) fadeOutAmplitude_ = 0.0;
+			const unsigned int baseIndex = i * 2;
+			const float value = audioBuffer_[audioBufferIndex_ + i] * fadeOutAmplitude_;
+			out[baseIndex]     = value;
+			out[baseIndex + 1] = value;
 		}
-		audioBufferIndex_ += numFrames * 2;
-	} else { // 1 input channel
-		unsigned int framesAvailable = audioBuffer_.size() - audioBufferIndex_;
-		numFrames = (framesAvailable > framesPerBuffer) ? framesPerBuffer : framesAvailable;
-		if (st == STATE_STOPPING) {
-			for (unsigned int i = 0; i < numFrames; ++i) {
-				fadeOutAmplitude_ -= fadeOutDelta_;
-				if (fadeOutAmplitude_ < 0.0) fadeOutAmplitude_ = 0.0;
-				unsigned int baseIndex = i * 2;
-				float value = audioBuffer_[audioBufferIndex_ + i] * fadeOutAmplitude_;
-				out[baseIndex]     = value;
-				out[baseIndex + 1] = value;
-			}
-		} else {
-			for (unsigned int i = 0; i < numFrames; ++i) {
-				unsigned int baseIndex = i * 2;
-				float value = audioBuffer_[audioBufferIndex_ + i];
-				out[baseIndex]     = value;
-				out[baseIndex + 1] = value;
-			}
+	} else {
+		for (unsigned int i = 0; i < numFrames; ++i) {
+			const unsigned int baseIndex = i * 2;
+			const float value = audioBuffer_[audioBufferIndex_ + i];
+			out[baseIndex]     = value;
+			out[baseIndex + 1] = value;
 		}
-		audioBufferIndex_ += numFrames;
 	}
+	audioBufferIndex_ += numFrames;
+
 	for (unsigned int i = numFrames; i < framesPerBuffer; ++i) {
-		unsigned int baseIndex = i * 2;
+		const unsigned int baseIndex = i * 2;
 		out[baseIndex]     = 0;
 		out[baseIndex + 1] = 0;
 	}

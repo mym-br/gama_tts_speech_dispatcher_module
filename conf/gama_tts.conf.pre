@@ -1,5 +1,7 @@
 
-config_dir_path = @CMAKE_INSTALL_PREFIX@/share/gama_tts/data/en
+config_dir_path = @CMAKE_INSTALL_PREFIX@/share/gama_tts/data/en/vtm0
+
+voice_file = voice_male.config
 
 # Execute "sd_gama_tts -o" to get the list of devices.
 # -1: use default

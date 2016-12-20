@@ -36,10 +36,10 @@ namespace GS {
 		class PhoneticStringParser;
 		class TextParser;
 	}
-	namespace TRM {
-		class Tube;
+	namespace VTM {
+		class VocalTractModel;
 	}
-	namespace TRMControlModel {
+	namespace VTMControlModel {
 		class Controller;
 		class Model;
 	}
@@ -69,16 +69,16 @@ private:
 	ModuleController& moduleController_;
 	std::thread synthThread_;
 
-	std::unique_ptr<GS::TRMControlModel::Model> model_;
-	std::unique_ptr<GS::TRMControlModel::Controller> modelController_;
+	std::unique_ptr<GS::VTMControlModel::Model> model_;
+	std::unique_ptr<GS::VTMControlModel::Controller> modelController_;
 	std::unique_ptr<GS::En::TextParser> textParser_;
 	std::unique_ptr<GS::En::PhoneticStringParser> phoneticStringParser_;
-	std::unique_ptr<GS::TRM::Tube> tube_;
+	std::unique_ptr<GS::VTM::VocalTractModel> vocalTractModel_;
 
 	ModuleController::CommandType commandType_;
 	std::string commandMessage_;
 
-	std::stringstream trmParamStream_;
+	std::stringstream vtmParamStream_;
 	std::vector<float> audioBuffer_;
 
 	ModuleConfiguration moduleConfig_;
