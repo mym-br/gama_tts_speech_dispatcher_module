@@ -3,12 +3,6 @@ GamaTTS module for Speech Dispatcher
 ====================================
 (Only the basic functionality has been implemented.)
 
-################################################################################
-WARNING:
-  This software is dangerous to your health.
-  Use at your own risk.
-################################################################################
-
 This is a GamaTTS output module for Speech Dispatcher
 (http://devel.freebsoft.org/speechd).
 
