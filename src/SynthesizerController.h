@@ -33,7 +33,6 @@
 
 namespace GS {
 	namespace En {
-		class PhoneticStringParser;
 		class TextParser;
 	}
 	namespace VTM {
@@ -42,6 +41,7 @@ namespace GS {
 	namespace VTMControlModel {
 		class Controller;
 		class Model;
+		class PhoneticStringParser;
 	}
 }
 
@@ -72,7 +72,7 @@ private:
 	std::unique_ptr<GS::VTMControlModel::Model> model_;
 	std::unique_ptr<GS::VTMControlModel::Controller> modelController_;
 	std::unique_ptr<GS::En::TextParser> textParser_;
-	std::unique_ptr<GS::En::PhoneticStringParser> phoneticStringParser_;
+	std::unique_ptr<GS::VTMControlModel::PhoneticStringParser> phoneticStringParser_;
 	std::unique_ptr<GS::VTM::VocalTractModel> vocalTractModel_;
 
 	ModuleController::CommandType commandType_;
