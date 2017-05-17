@@ -163,7 +163,7 @@ SynthesizerController::speak()
 		vtmParamStream_.str("");
 		vtmParamStream_.clear();
 
-		std::string phoneticString = textParser_->parseText(commandMessage_.c_str());
+		std::string phoneticString = textParser_->parse(commandMessage_.c_str());
 		modelController_->fillParameterStream(*phoneticStringParser_, phoneticString.c_str(), vtmParamStream_);
 		vocalTractModel_->synthesizeToBuffer(vtmParamStream_, audioBuffer_);
 	} catch (const std::exception& exc) {
