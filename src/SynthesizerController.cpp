@@ -25,7 +25,6 @@
 
 #include "ConfigurationData.h"
 #include "Controller.h"
-#include "PhoneticStringParser.h"
 #include "en/text_parser/TextParser.h"
 #include "Model.h"
 #include "Util.h"
@@ -106,7 +105,6 @@ SynthesizerController::init()
 								vtmControlConfig.dictionary1File,
 								vtmControlConfig.dictionary2File,
 								vtmControlConfig.dictionary3File);
-		phoneticStringParser_ = std::make_unique<GS::VTMControlModel::PhoneticStringParser>(configDirPath.c_str(), *modelController_);
 
 		std::ostringstream vtmConfigFilePath;
 		vtmConfigFilePath << configDirPath << VTM_CONFIG_FILE_NAME;
@@ -164,7 +162,7 @@ SynthesizerController::speak()
 		vtmParamStream_.clear();
 
 		std::string phoneticString = textParser_->parse(commandMessage_.c_str());
-		modelController_->fillParameterStream(*phoneticStringParser_, phoneticString.c_str(), vtmParamStream_);
+		modelController_->fillParameterStream(phoneticString.c_str(), vtmParamStream_);
 		vocalTractModel_->synthesizeToBuffer(vtmParamStream_, audioBuffer_);
 	} catch (const std::exception& exc) {
 		std::ostringstream msg;
