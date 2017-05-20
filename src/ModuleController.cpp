@@ -27,13 +27,13 @@
 
 
 ModuleController::ModuleController(std::istream& in, std::ostream& out, const char* configFilePath)
-		: state {STATE_IDLE}
-		, in_ {in}
-		, out_ {out}
-		, configFilePath_ {configFilePath}
-		, newCommand_ {false}
-		, commandType_ {COMMAND_NONE}
-		, synthController_ {std::make_unique<SynthesizerController>(*this)}
+		: state_{STATE_IDLE}
+		, in_{in}
+		, out_{out}
+		, configFilePath_{configFilePath}
+		, newCommand_{false}
+		, commandType_{COMMAND_NONE}
+		, synthController_{std::make_unique<SynthesizerController>(*this)}
 {
 }
 
@@ -170,14 +170,14 @@ ModuleController::handleSpeakCommand()
 
 	Util::stripSSML(msg);
 
-	state = STATE_SPEAKING;
+	state_ = STATE_SPEAKING;
 	setSynthCommand(COMMAND_SPEAK, msg);
 }
 
 void
 ModuleController::handleStopCommand()
 {
-	state = STATE_STOP_REQUESTED;
+	state_ = STATE_STOP_REQUESTED;
 }
 
 void
@@ -254,7 +254,7 @@ ModuleController::setSynthCommandResult(CommandType type, bool failed, const std
 	case COMMAND_SPEAK:
 		if (failed) {
 			sendResponse("301 ERROR CANT SPEAK");
-			state = STATE_IDLE;
+			state_ = STATE_IDLE;
 		} else {
 			sendResponse("200 OK SPEAKING");
 		}
@@ -285,7 +285,7 @@ ModuleController::sendEndEvent()
 	out_ << "702 END" << std::endl;
 	responseMutex_.unlock();
 
-	state = STATE_IDLE;
+	state_ = STATE_IDLE;
 }
 
 void
@@ -295,7 +295,7 @@ ModuleController::sendStopEvent()
 	out_ << "703 STOP" << std::endl;
 	responseMutex_.unlock();
 
-	state = STATE_IDLE;
+	state_ = STATE_IDLE;
 }
 
 void

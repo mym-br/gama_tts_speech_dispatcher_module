@@ -60,7 +60,7 @@ public:
 	void sendStopEvent();
 	void getConfigCopy(ModuleConfiguration& config);
 
-	std::atomic_uint state;
+	unsigned int state() const { return state_; }
 private:
 	void handleInitCommand();
 	void handleAudioCommand();
@@ -85,6 +85,8 @@ private:
 	std::string commandMessage_;
 
 	std::unique_ptr<SynthesizerController> synthController_;
+
+	std::atomic_uint state_;
 };
 
 #endif /* MODULE_CONTROLLER_H_ */

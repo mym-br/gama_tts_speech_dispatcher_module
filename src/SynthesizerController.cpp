@@ -209,7 +209,7 @@ SynthesizerController::speak()
 			sys.sleep(100 /* ms */);
 
 			if (!stopping) {
-				unsigned int moduleControllerState = moduleController_.state;
+				unsigned int moduleControllerState = moduleController_.state();
 				if (moduleControllerState == ModuleController::STATE_STOP_REQUESTED) {
 					state_ = STATE_STOPPING;
 					stopping = true;
