@@ -25,8 +25,8 @@
 
 #include "ConfigurationData.h"
 #include "Controller.h"
-#include "en/text_parser/TextParser.h"
 #include "Model.h"
+#include "TextParser.h"
 #include "Util.h"
 #include "VocalTractModel.h"
 
@@ -101,10 +101,11 @@ SynthesizerController::init()
 		const GS::VTMControlModel::Configuration& vtmControlConfig = modelController_->vtmControlModelConfiguration();
 		defaultPitchOffset_ = vtmControlConfig.pitchOffset;
 
-		textParser_ = std::make_unique<GS::En::TextParser>(configDirPath.c_str(),
-								vtmControlConfig.dictionary1File,
-								vtmControlConfig.dictionary2File,
-								vtmControlConfig.dictionary3File);
+		textParser_ = GS::VTMControlModel::TextParser::getInstance(vtmControlConfig.language,
+									configDirPath.c_str(),
+									vtmControlConfig.dictionary1File,
+									vtmControlConfig.dictionary2File,
+									vtmControlConfig.dictionary3File);
 
 		std::ostringstream vtmConfigFilePath;
 		vtmConfigFilePath << configDirPath << VTM_CONFIG_FILE_NAME;
