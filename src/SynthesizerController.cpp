@@ -101,11 +101,7 @@ SynthesizerController::init()
 		const GS::VTMControlModel::Configuration& vtmControlConfig = modelController_->vtmControlModelConfiguration();
 		defaultPitchOffset_ = vtmControlConfig.pitchOffset;
 
-		textParser_ = GS::VTMControlModel::TextParser::getInstance(vtmControlConfig.language,
-									configDirPath.c_str(),
-									vtmControlConfig.dictionary1File,
-									vtmControlConfig.dictionary2File,
-									vtmControlConfig.dictionary3File);
+		textParser_ = GS::VTMControlModel::TextParser::getInstance(configDirPath.c_str(), vtmControlConfig);
 
 		std::ostringstream vtmConfigFilePath;
 		vtmConfigFilePath << configDirPath << VTM_CONFIG_FILE_NAME;
