@@ -1,5 +1,5 @@
 /***************************************************************************
- *  Copyright 2015 Marcelo Y. Matuda                                       *
+ *  Copyright 2015, 2017 Marcelo Y. Matuda                                 *
  *                                                                         *
  *  This program is free software: you can redistribute it and/or modify   *
  *  it under the terms of the GNU General Public License as published by   *
@@ -24,6 +24,7 @@
 #include <memory>
 #include <mutex>
 #include <ostream>
+#include <string>
 
 #include "ModuleConfiguration.h"
 
@@ -50,16 +51,34 @@ public:
 	ModuleController(std::istream& in, std::ostream& out, const char* configFilePath);
 	~ModuleController();
 
+	// Main loop.
 	void exec();
+
+	// [commandMutex_] Called by ModuleController.
 	void setSynthCommand(CommandType type, const std::string& message);
+
+	// [commandMutex_] Called by SynthesizerController.
 	void getSynthCommand(CommandType& type, std::string& message, bool wait=false);
+
+	// [responseMutex_] Called by SynthesizerController.
 	void setSynthCommandResult(CommandType type, bool failed, const std::string& msg);
-	void sendResponse(const char* msg);
+
+	// [responseMutex_] Called by ModuleController.
+	void sendResponse(const std::string& msg);
+
+	// [responseMutex_] Called by SynthesizerController.
 	void sendBeginEvent();
+
+	// [responseMutex_] Called by SynthesizerController.
 	void sendEndEvent();
+
+	// [responseMutex_] Called by SynthesizerController.
 	void sendStopEvent();
+
+	// [configMutex_] Called by SynthesizerController.
 	void getConfigCopy(ModuleConfiguration& config);
 
+	// [atomic] Called by SynthesizerController.
 	unsigned int state() const { return state_; }
 private:
 	void handleInitCommand();
@@ -70,14 +89,15 @@ private:
 	void handleStopCommand();
 	void handleQuitCommand();
 
+	std::atomic_uint state_;
 	std::istream& in_;
 	std::ostream& out_;
-	const char* configFilePath_;
+	std::string configFilePath_;
 	ModuleConfiguration config_;
 	std::mutex configMutex_;
 	std::mutex commandMutex_;
-	std::condition_variable commandSentCondition_;
-	std::condition_variable commandReceivedCondition_;
+	std::condition_variable commandSentCondition_; // command sent to SynthesizerController
+	std::condition_variable commandReceivedCondition_; // command received by SynthesizerController
 	std::mutex responseMutex_;
 
 	bool newCommand_;
@@ -85,8 +105,6 @@ private:
 	std::string commandMessage_;
 
 	std::unique_ptr<SynthesizerController> synthController_;
-
-	std::atomic_uint state_;
 };
 
 #endif /* MODULE_CONTROLLER_H_ */

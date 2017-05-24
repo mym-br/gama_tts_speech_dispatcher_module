@@ -1,5 +1,5 @@
 
-config_dir_path = @CMAKE_INSTALL_PREFIX@/share/gama_tts/data/en/vtm0
+config_dir_path = @CMAKE_INSTALL_PREFIX@/share/gama_tts/data/english/vtm0
 
 voice_file = voice_male.config
 

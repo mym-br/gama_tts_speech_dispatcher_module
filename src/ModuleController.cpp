@@ -1,5 +1,5 @@
 /***************************************************************************
- *  Copyright 2015 Marcelo Y. Matuda                                       *
+ *  Copyright 2015, 2017 Marcelo Y. Matuda                                 *
  *                                                                         *
  *  This program is free software: you can redistribute it and/or modify   *
  *  it under the terms of the GNU General Public License as published by   *
@@ -17,21 +17,65 @@
 
 #include "ModuleController.h"
 
-#include <exception>
 #include <sstream>
-#include <string>
 
 #include "SynthesizerController.h"
 #include "Util.h"
 
 
 
+namespace {
+
+const std::string     audioCmdStr{"AUDIO"};
+const std::string      charCmdStr{"CHAR"};
+const std::string      initCmdStr{"INIT"};
+const std::string       keyCmdStr{"KEY"};
+const std::string  logLevelCmdStr{"LOGLEVEL"};
+const std::string      quitCmdStr{"QUIT"};
+const std::string       setCmdStr{"SET"};
+const std::string soundIconCmdStr{"SOUND_ICON"};
+const std::string     speakCmdStr{"SPEAK"};
+const std::string      stopCmdStr{"STOP"};
+
+const std::string respAudioInitStr{      "207 OK RECEIVING AUDIO SETTINGS"};
+const std::string respAudioDoneStr{      "203 OK AUDIO INITIALIZED"};
+const std::string respBeginEventStr{     "701 BEGIN"};
+const std::string respEndEventStr{       "702 END"};
+const std::string respExecFailStr{       "300 ERROR"};
+const std::string respLogLevelInitStr{   "207 OK RECEIVING LOGLEVEL SETTINGS"};
+const std::string respLogLevelDoneStr{   "203 OK LOG LEVEL SET"};
+const std::string respQuitDoneStr{       "210 OK QUIT"};
+const std::string respSetInitStr{        "203 OK RECEIVING SETTINGS"};
+const std::string respSetDoneStr{        "203 OK SETTINGS RECEIVED"};
+const std::string respSpeakInitStr{      "202 OK RECEIVING MESSAGE"};
+const std::string respStopEventStr{      "703 STOP"};
+const std::string respSynthInitDoneStr{  "299-GamaTTS: Initialized successfully.\n"
+                                         "299 OK LOADED SUCCESSFULLY"};
+const std::string respSynthInitFailStr_1{"399-GamaTTS: "};
+const std::string respSynthInitFailStr_2{"399 ERR CANT INIT MODULE"};
+const std::string respSynthSpeakFailStr{ "301 ERROR CANT SPEAK"};
+const std::string respSynthSpeakDoneStr{ "200 OK SPEAKING"};
+
+const std::string    capLetRecognStr{"cap_let_recogn"};
+const std::string             dotStr{"."};
+const std::string        languageStr{"language"};
+const std::string        logLevelStr{"log_level"};
+const std::string           pitchStr{"pitch"};
+const std::string punctuationModeStr{"punctuation_mode"};
+const std::string            rateStr{"rate"};
+const std::string    spellingModeStr{"spelling_mode"};
+const std::string  synthesisVoiceStr{"synthesis_voice"};
+const std::string           voiceStr{"voice"};
+const std::string          volumeStr{"volume"};
+
+}
+
 ModuleController::ModuleController(std::istream& in, std::ostream& out, const char* configFilePath)
 		: state_{STATE_IDLE}
 		, in_{in}
 		, out_{out}
 		, configFilePath_{configFilePath}
-		, newCommand_{false}
+		, newCommand_{}
 		, commandType_{COMMAND_NONE}
 		, synthController_{std::make_unique<SynthesizerController>(*this)}
 {
@@ -46,23 +90,23 @@ ModuleController::exec()
 {
 	std::string line;
 	while (std::getline(in_, line)) {
-		if (line == "INIT") {
-			handleInitCommand();
-		} else if (line == "AUDIO") {
-			handleAudioCommand();
-		} else if (line == "LOGLEVEL") {
-			handleLogLevelCommand();
-		} else if (line == "SET") {
-			handleSetCommand();
-		} else if (line == "SPEAK" || line == "CHAR" || line == "KEY" || line == "SOUND_ICON") {
+		if (line == speakCmdStr || line == charCmdStr || line == keyCmdStr || line == soundIconCmdStr) {
 			handleSpeakCommand();
-		} else if (line == "STOP") {
+		} else if (line == initCmdStr) {
+			handleInitCommand();
+		} else if (line == audioCmdStr) {
+			handleAudioCommand();
+		} else if (line == logLevelCmdStr) {
+			handleLogLevelCommand();
+		} else if (line == setCmdStr) {
+			handleSetCommand();
+		} else if (line == stopCmdStr) {
 			handleStopCommand();
-		} else if (line == "QUIT") {
+		} else if (line == quitCmdStr) {
 			handleQuitCommand();
 			return;
 		} else {
-			sendResponse("300 ERROR");
+			sendResponse(respExecFailStr);
 		}
 	}
 }
@@ -76,7 +120,7 @@ ModuleController::handleInitCommand()
 void
 ModuleController::handleAudioCommand()
 {
-	sendResponse("207 OK RECEIVING AUDIO SETTINGS");
+	sendResponse(respAudioInitStr);
 
 //	audio_output_method=alsa
 //	audio_oss_device=/dev/dsp
@@ -87,80 +131,81 @@ ModuleController::handleAudioCommand()
 
 	std::string line;
 	while (std::getline(in_, line)) {
-		if (line == ".") break;
+		if (line == dotStr) break;
 
 		// Ignore data.
 	}
 
-	sendResponse("203 OK AUDIO INITIALIZED");
+	sendResponse(respAudioDoneStr);
 }
 
 void
 ModuleController::handleLogLevelCommand()
 {
-	sendResponse("207 OK RECEIVING LOGLEVEL SETTINGS");
+	sendResponse(respLogLevelInitStr);
 
 	std::string line;
 	while (std::getline(in_, line)) {
-		if (line == ".") break;
+		if (line == dotStr) break;
 
-		auto pair = Util::getNameAndValue(line);
-		if (pair.first == "log_level") {
-			config_.setLogLevel(pair.second);
+		auto p = Util::getNameAndValue(line);
+		if (p.first == logLevelStr) {
+			std::lock_guard<std::mutex> lock(configMutex_);
+			config_.setLogLevel(p.second);
 		}
 	}
 
-	sendResponse("203 OK LOG LEVEL SET");
+	sendResponse(respLogLevelDoneStr);
 }
 
 void
 ModuleController::handleSetCommand()
 {
-	sendResponse("203 OK RECEIVING SETTINGS");
+	sendResponse(respSetInitStr);
 
 	{
 		std::lock_guard<std::mutex> lock(configMutex_);
 
 		std::string line;
 		while (std::getline(in_, line)) {
-			if (line == ".") break;
+			if (line == dotStr) break;
 
 			auto p = Util::getNameAndValue(line);
-			if (p.first == "pitch") {
+			if (p.first == pitchStr) {
 				config_.setPitch(p.second);
-			} else if (p.first == "rate") {
+			} else if (p.first == rateStr) {
 				config_.setRate(p.second);
-			} else if (p.first == "volume") {
+			} else if (p.first == volumeStr) {
 				config_.setVolume(p.second);
-			} else if (p.first == "punctuation_mode") {
+			} else if (p.first == punctuationModeStr) {
 				config_.setPunctuationMode(p.second);
-			} else if (p.first == "spelling_mode") {
+			} else if (p.first == spellingModeStr) {
 				config_.setSpellingMode(p.second);
-			} else if (p.first == "cap_let_recogn") {
+			} else if (p.first == capLetRecognStr) {
 				config_.setCapitalLetterRecognition(p.second);
-			} else if (p.first == "voice") {
+			} else if (p.first == voiceStr) {
 				config_.setVoice(p.second);
-			} else if (p.first == "language") {
+			} else if (p.first == languageStr) {
 				config_.setLanguage(p.second);
-			} else if (p.first == "synthesis_voice") {
+			} else if (p.first == synthesisVoiceStr) {
 				config_.setSynthesisVoice(p.second);
 			}
 		}
 	}
-	setSynthCommand(COMMAND_SET, std::string());
+	setSynthCommand(COMMAND_SET, std::string{});
 
-	sendResponse("203 OK SETTINGS RECEIVED");
+	sendResponse(respSetDoneStr);
 }
 
 void
 ModuleController::handleSpeakCommand()
 {
-	sendResponse("202 OK RECEIVING MESSAGE");
+	sendResponse(respSpeakInitStr);
 
 	std::ostringstream out;
 	std::string line;
 	while (std::getline(in_, line)) {
-		if (line == ".") break;
+		if (line == dotStr) break;
 		if (out.tellp() != 0) {
 			out << ' ';
 		}
@@ -187,7 +232,7 @@ ModuleController::handleQuitCommand()
 
 	synthController_->wait();
 
-	sendResponse("210 OK QUIT");
+	sendResponse(respQuitDoneStr);
 }
 
 void
@@ -241,22 +286,18 @@ ModuleController::setSynthCommandResult(CommandType type, bool failed, const std
 	case COMMAND_INIT:
 		if (failed) {
 			std::ostringstream stream;
-			stream <<
-				"399-GamaTTS: " << msg << '\n' <<
-				"399 ERR CANT INIT MODULE";
-			sendResponse(stream.str().c_str());
+			stream << respSynthInitFailStr_1 << msg << '\n' << respSynthInitFailStr_2;
+			sendResponse(stream.str());
 		} else {
-			sendResponse(
-				"299-GamaTTS: Initialized successfully.\n"
-				"299 OK LOADED SUCCESSFULLY");
+			sendResponse(respSynthInitDoneStr);
 		}
 		break;
 	case COMMAND_SPEAK:
 		if (failed) {
-			sendResponse("301 ERROR CANT SPEAK");
+			sendResponse(respSynthSpeakFailStr);
 			state_ = STATE_IDLE;
 		} else {
-			sendResponse("200 OK SPEAKING");
+			sendResponse(respSynthSpeakDoneStr);
 		}
 		break;
 	default:
@@ -265,7 +306,7 @@ ModuleController::setSynthCommandResult(CommandType type, bool failed, const std
 }
 
 void
-ModuleController::sendResponse(const char* msg)
+ModuleController::sendResponse(const std::string& msg)
 {
 	std::lock_guard<std::mutex> lock(responseMutex_);
 	out_ << msg << std::endl;
@@ -275,14 +316,14 @@ void
 ModuleController::sendBeginEvent()
 {
 	std::lock_guard<std::mutex> lock(responseMutex_);
-	out_ << "701 BEGIN" << std::endl;
+	out_ << respBeginEventStr << std::endl;
 }
 
 void
 ModuleController::sendEndEvent()
 {
 	responseMutex_.lock();
-	out_ << "702 END" << std::endl;
+	out_ << respEndEventStr << std::endl;
 	responseMutex_.unlock();
 
 	state_ = STATE_IDLE;
@@ -292,7 +333,7 @@ void
 ModuleController::sendStopEvent()
 {
 	responseMutex_.lock();
-	out_ << "703 STOP" << std::endl;
+	out_ << respStopEventStr << std::endl;
 	responseMutex_.unlock();
 
 	state_ = STATE_IDLE;

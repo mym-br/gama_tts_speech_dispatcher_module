@@ -47,7 +47,9 @@ public:
 	SynthesizerController(ModuleController& moduleController);
 	~SynthesizerController();
 
+	// Main thread function.
 	void exec();
+
 	void wait();
 private:
 	enum State {
@@ -81,7 +83,6 @@ private:
 	double defaultPitchOffset_;
 
 	unsigned int audioBufferIndex_;
-	unsigned int numInputChannels_;
 	int audioOutputDeviceIndex_;
 
 	std::atomic_uint state_;

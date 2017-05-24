@@ -1,5 +1,5 @@
 /***************************************************************************
- *  Copyright 2015 Marcelo Y. Matuda                                       *
+ *  Copyright 2015, 2017 Marcelo Y. Matuda                                 *
  *                                                                         *
  *  This program is free software: you can redistribute it and/or modify   *
  *  it under the terms of the GNU General Public License as published by   *
@@ -30,6 +30,8 @@ void stripSSML(std::string& msg);
 std::pair<std::string, std::string> getNameAndValue(const std::string& s);
 void removeLF(std::string& msg);
 template<typename T> T convertString(const std::string& s);
+bool compare(const std::string& s1, const std::string& s2, std::string::size_type s2Index);
+template<typename T> T bound(T min, T value, T max);
 
 
 
@@ -41,6 +43,18 @@ convertString(const std::string& s) {
 	in >> res;
 	if (!in) return 0;
 	return res;
+}
+
+template<typename T>
+T
+bound(T min, T value, T max)
+{
+	if (value > max) {
+		return max;
+	} else if (value < min) {
+		return min;
+	}
+	return value;
 }
 
 } // namespace Util

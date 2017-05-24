@@ -20,7 +20,6 @@
 #include <cmath> /* pow */
 #include <exception>
 #include <iostream>
-#include <cstring>
 #include <string>
 
 #include "ConfigurationData.h"
@@ -37,15 +36,15 @@
 
 
 SynthesizerController::SynthesizerController(ModuleController& moduleController)
-		: moduleController_(moduleController)
-		, synthThread_(&SynthesizerController::exec, std::ref(*this))
-		, defaultPitchOffset_(0.0)
-		, audioBufferIndex_(0)
-		, numInputChannels_(0)
-		, audioOutputDeviceIndex_(-1)
-		, state_(STATE_STOPPED)
-		, fadeOutAmplitude_(1.0)
-		, fadeOutDelta_(0.0)
+		: moduleController_{moduleController}
+		, synthThread_{&SynthesizerController::exec, std::ref(*this)}
+		, commandType_{ModuleController::COMMAND_NONE}
+		, defaultPitchOffset_{}
+		, audioBufferIndex_{}
+		, audioOutputDeviceIndex_{-1}
+		, state_{STATE_STOPPED}
+		, fadeOutAmplitude_{1.0}
+		, fadeOutDelta_{}
 {
 }
 
@@ -101,7 +100,7 @@ SynthesizerController::init()
 		const GS::VTMControlModel::Configuration& vtmControlConfig = modelController_->vtmControlModelConfiguration();
 		defaultPitchOffset_ = vtmControlConfig.pitchOffset;
 
-		textParser_ = GS::VTMControlModel::TextParser::getInstance(configDirPath.c_str(), vtmControlConfig);
+		textParser_ = GS::VTMControlModel::TextParser::getInstance(configDirPath, vtmControlConfig);
 
 		std::ostringstream vtmConfigFilePath;
 		vtmConfigFilePath << configDirPath << VTM_CONFIG_FILE_NAME;
@@ -123,7 +122,7 @@ SynthesizerController::init()
 		return;
 	}
 
-	moduleController_.setSynthCommandResult(commandType_, false, std::string());
+	moduleController_.setSynthCommandResult(commandType_, false, std::string{});
 }
 
 void
@@ -132,14 +131,14 @@ SynthesizerController::set()
 	moduleController_.getConfigCopy(moduleConfig_);
 
 	GS::VTMControlModel::Configuration& vtmControlConfig = modelController_->vtmControlModelConfiguration();
-	vtmControlConfig.pitchOffset = defaultPitchOffset_ + moduleConfig_.pitch / 5.0;
+	vtmControlConfig.pitchOffset = defaultPitchOffset_ + moduleConfig_.pitch / 10.0;
 	vtmControlConfig.tempo = std::pow(10.0, moduleConfig_.rate / 100.0);
-//	if (moduleConfig_.voice == "female1") {
-//	} else if (moduleConfig_.voice == "male2") {
-//	} else if (moduleConfig_.voice == "child_male") {
-//	} else if (moduleConfig_.voice == "child_female") {
-//	} else { // male1 and others
-//	}
+
+	if (moduleConfig_.spellingMode) {
+		textParser_->setMode(GS::VTMControlModel::TextParser::MODE_LETTER);
+	} else {
+		textParser_->setMode(GS::VTMControlModel::TextParser::MODE_NORMAL);
+	}
 }
 
 void
@@ -159,7 +158,7 @@ SynthesizerController::speak()
 		vtmParamStream_.clear();
 
 		std::string phoneticString = textParser_->parse(commandMessage_.c_str());
-		modelController_->fillParameterStream(phoneticString.c_str(), vtmParamStream_);
+		modelController_->fillParameterStream(phoneticString, vtmParamStream_);
 		vocalTractModel_->synthesizeToBuffer(vtmParamStream_, audioBuffer_);
 	} catch (const std::exception& exc) {
 		std::ostringstream msg;
@@ -170,7 +169,7 @@ SynthesizerController::speak()
 		moduleController_.setSynthCommandResult(commandType_, true, s);
 		return;
 	}
-	moduleController_.setSynthCommandResult(commandType_, false, std::string());
+	moduleController_.setSynthCommandResult(commandType_, false, std::string{});
 
 	//----------------
 	// Play the audio.

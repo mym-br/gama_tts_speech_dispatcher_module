@@ -1,5 +1,5 @@
 /***************************************************************************
- *  Copyright 2015 Marcelo Y. Matuda                                       *
+ *  Copyright 2015, 2017 Marcelo Y. Matuda                                 *
  *                                                                         *
  *  This program is free software: you can redistribute it and/or modify   *
  *  it under the terms of the GNU General Public License as published by   *
@@ -17,7 +17,13 @@
 
 #include "Util.h"
 
+namespace {
 
+const std::string  ltStr{"lt;"};
+const std::string  gtStr{"gt;"};
+const std::string ampStr{"amp;"};
+
+}
 
 namespace Util {
 
@@ -31,7 +37,6 @@ stripSSML(std::string& msg)
 	const std::string::size_type size = msg.size();
 	while (pos < size) {
 		if (msg[pos] == '<') {
-			dest[destPos++] = ' ';
 			std::string::size_type findPos = msg.find('>', pos + 1);
 			if (findPos == std::string::npos) {
 				pos = size;
@@ -41,27 +46,28 @@ stripSSML(std::string& msg)
 			continue;
 		} else if (msg[pos] == '&') {
 			const std::string::size_type nextPos = pos + 1;
-			if (msg.find("lt;", nextPos) == nextPos) {
+			if (compare(ltStr, msg, nextPos)) {
 				dest[destPos++] = '<';
-				pos += 4;
-				continue;
-			}
-			if (msg.find("gt;", nextPos) == nextPos) {
+				pos += ltStr.length() + 1;
+			} else if (compare(gtStr, msg, nextPos)) {
 				dest[destPos++] = '>';
-				pos += 4;
-				continue;
-			}
-			if (msg.find("amp;", nextPos) == nextPos) {
+				pos += gtStr.length() + 1;
+			} else if (compare(ampStr, msg, nextPos)) {
 				dest[destPos++] = '&';
-				pos += 5;
-				continue;
+				pos += ampStr.length() + 1;
+			} else {
+				++pos; // ignore
 			}
+			continue;
 		}
 		dest[destPos++] = msg[pos++];
 	}
 
+	// Ignore trailing spaces.
+	while (destPos >= 1 && dest[destPos - 1] == ' ') --destPos;
+
 	dest.resize(destPos);
-	msg.swap(dest);
+	msg = std::move(dest);
 }
 
 std::pair<std::string, std::string>
@@ -69,7 +75,7 @@ getNameAndValue(const std::string& s)
 {
 	std::string::size_type pos = s.find('=');
 	if (pos == std::string::npos || pos == s.size() - 1) {
-		return std::make_pair(s, std::string());
+		return std::make_pair(s, std::string{});
 	}
 	return std::make_pair(s.substr(0, pos), s.substr(pos + 1, s.size() - pos - 1));
 }
@@ -82,6 +88,23 @@ removeLF(std::string& msg)
 			c = ' ';
 		}
 	}
+}
+
+bool
+compare(const std::string& s1, const std::string& s2, std::string::size_type s2Index)
+{
+	if (s2Index >= s2.length()) return false;
+	if (s2Index + s1.length() > s2.length()) {
+		return false;
+	}
+	std::string::const_iterator it1 = s1.cbegin();
+	std::string::const_iterator it2 = s2.cbegin() + s2Index;
+	while (it1 != s1.cend()) {
+		if (*it1 != *it2) return false;
+		++it1;
+		++it2;
+	}
+	return true;
 }
 
 } // namespace Util

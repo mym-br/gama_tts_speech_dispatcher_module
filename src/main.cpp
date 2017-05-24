@@ -1,5 +1,5 @@
 /***************************************************************************
- *  Copyright 2015 Marcelo Y. Matuda                                       *
+ *  Copyright 2015, 2017 Marcelo Y. Matuda                                 *
  *                                                                         *
  *  This program is free software: you can redistribute it and/or modify   *
  *  it under the terms of the GNU General Public License as published by   *
@@ -15,7 +15,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.  *
  ***************************************************************************/
 
-#include <cstring>
+#include <cstring> /* strcmp */
 #include <iomanip>
 #include <iostream>
 
@@ -66,7 +66,7 @@ main(int argc, char* argv[])
 
 	portaudio::AutoSystem portaudio;
 
-	if (!std::strcmp(argv[1], "-o")) {
+	if (std::strcmp(argv[1], "-o") == 0) {
 		showAudioOutputDevices();
 		return 0;
 	}

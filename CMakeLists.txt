@@ -13,10 +13,14 @@ find_package(PkgConfig)
 
 add_executable(sd_gama_tts
     src/main.cpp
-    src/ModuleConfiguration.cpp src/ModuleConfiguration.h
-    src/ModuleController.cpp src/ModuleController.h
-    src/SynthesizerController.cpp src/SynthesizerController.h
-    src/Util.cpp src/Util.h
+    src/ModuleConfiguration.cpp
+    src/ModuleConfiguration.h
+    src/ModuleController.cpp
+    src/ModuleController.h
+    src/SynthesizerController.cpp
+    src/SynthesizerController.h
+    src/Util.cpp
+    src/Util.h
 )
 
 pkg_check_modules(PORTAUDIOCPP portaudiocpp)

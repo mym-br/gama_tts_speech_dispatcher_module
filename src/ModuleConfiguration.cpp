@@ -1,5 +1,5 @@
 /***************************************************************************
- *  Copyright 2015 Marcelo Y. Matuda                                       *
+ *  Copyright 2015, 2017 Marcelo Y. Matuda                                 *
  *                                                                         *
  *  This program is free software: you can redistribute it and/or modify   *
  *  it under the terms of the GNU General Public License as published by   *
@@ -19,15 +19,24 @@
 
 #include "Util.h"
 
+namespace {
 
+const std::string  someStr{"some"};
+const std::string   allStr{"all"};
+const std::string    onStr{"on"};
+const std::string spellStr{"spell"};
+const std::string  iconStr{"icon"};
+const std::string  nullStr{"NULL"};
+
+}
 
 ModuleConfiguration::ModuleConfiguration()
-		: logLevel(0)
-		, pitch(0.0)
-		, rate(0.0)
-		, volume(0.0)
+		: logLevel{}
+		, pitch{}
+		, rate{}
+		, volume{}
 		, punctuationMode(PUNCTUATION_NONE)
-		, spellingMode(false)
+		, spellingMode{}
 		, capitalLetterRecognition(CAPITAL_LETTER_RECOGNITION_NONE)
 {
 }
@@ -43,36 +52,30 @@ ModuleConfiguration::setLogLevel(const std::string& s)
 void
 ModuleConfiguration::setPitch(const std::string& s)
 {
-	float value = Util::convertString<float>(s);
-	if (value >  100.0f) value =  100.0f;
-	if (value < -100.0f) value = -100.0f;
-	pitch = value;
+	const float value = Util::convertString<float>(s);
+	pitch = Util::bound(-100.0f, value, 100.0f);
 }
 
 void
 ModuleConfiguration::setRate(const std::string& s)
 {
-	float value = Util::convertString<float>(s);
-	if (value >  100.0f) value =  100.0f;
-	if (value < -100.0f) value = -100.0f;
-	rate = value;
+	const float value = Util::convertString<float>(s);
+	rate = Util::bound(-100.0f, value, 100.0f);
 }
 
 void
 ModuleConfiguration::setVolume(const std::string& s)
 {
-	float value = Util::convertString<float>(s);
-	if (value >  100.0f) value =  100.0f;
-	if (value < -100.0f) value = -100.0f;
-	volume = value;
+	const float value = Util::convertString<float>(s);
+	volume = Util::bound(-100.0f, value, 100.0f);
 }
 
 void
 ModuleConfiguration::setPunctuationMode(const std::string& s)
 {
-	if (s == "some") {
+	if (s == someStr) {
 		punctuationMode = PUNCTUATION_SOME;
-	} else if (s == "all") {
+	} else if (s == allStr) {
 		punctuationMode = PUNCTUATION_ALL;
 	} else { // "none"
 		punctuationMode = PUNCTUATION_NONE;
@@ -82,7 +85,7 @@ ModuleConfiguration::setPunctuationMode(const std::string& s)
 void
 ModuleConfiguration::setSpellingMode(const std::string& s)
 {
-	if (s == "on") {
+	if (s == onStr) {
 		spellingMode = true;
 	} else { // "off"
 		spellingMode = false;
@@ -92,9 +95,9 @@ ModuleConfiguration::setSpellingMode(const std::string& s)
 void
 ModuleConfiguration::setCapitalLetterRecognition(const std::string& s)
 {
-	if (s == "spell") {
+	if (s == spellStr) {
 		capitalLetterRecognition = CAPITAL_LETTER_RECOGNITION_SPELL;
-	} else if (s == "icon") {
+	} else if (s == iconStr) {
 		capitalLetterRecognition = CAPITAL_LETTER_RECOGNITION_ICON;
 	} else { // "none"
 		capitalLetterRecognition = CAPITAL_LETTER_RECOGNITION_NONE;
@@ -104,8 +107,8 @@ ModuleConfiguration::setCapitalLetterRecognition(const std::string& s)
 void
 ModuleConfiguration::setVoice(const std::string& s)
 {
-	if (s == "NULL") {
-		voice = std::string();
+	if (s == nullStr) {
+		voice = std::string{};
 	} else {
 		voice = s;
 	}
@@ -114,8 +117,8 @@ ModuleConfiguration::setVoice(const std::string& s)
 void
 ModuleConfiguration::setLanguage(const std::string& s)
 {
-	if (s == "NULL") {
-		language = std::string();
+	if (s == nullStr) {
+		language = std::string{};
 	} else {
 		language = s;
 	}
@@ -124,8 +127,8 @@ ModuleConfiguration::setLanguage(const std::string& s)
 void
 ModuleConfiguration::setSynthesisVoice(const std::string& s)
 {
-	if (s == "NULL") {
-		synthesisVoice = std::string();
+	if (s == nullStr) {
+		synthesisVoice = std::string{};
 	} else {
 		synthesisVoice = s;
 	}
