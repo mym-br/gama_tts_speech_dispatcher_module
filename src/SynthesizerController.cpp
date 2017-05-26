@@ -90,7 +90,6 @@ SynthesizerController::init()
 	try {
 		GS::ConfigurationData data(commandMessage_);
 		const std::string configDirPath = data.value<std::string>("config_dir_path");
-		const std::string voiceFile = data.value<std::string>("voice_file");
 		audioOutputDeviceIndex_ = data.value<int>("audio_output_device_index");
 
 		model_ = std::make_unique<GS::VTMControlModel::Model>();
@@ -104,12 +103,8 @@ SynthesizerController::init()
 
 		std::ostringstream vtmConfigFilePath;
 		vtmConfigFilePath << configDirPath << VTM_CONFIG_FILE_NAME;
-
-		std::ostringstream voiceFilePath;
-		voiceFilePath << configDirPath << '/' << voiceFile;
-
-		GS::ConfigurationData vtmData(voiceFilePath.str());
-		vtmData.insert(GS::ConfigurationData(vtmConfigFilePath.str()));
+		GS::ConfigurationData vtmData(vtmConfigFilePath.str());
+		vtmData.insert(*vtmControlConfig.voiceData);
 
 		vocalTractModel_ = GS::VTM::VocalTractModel::getInstance(vtmData);
 	} catch (const std::exception& exc) {
