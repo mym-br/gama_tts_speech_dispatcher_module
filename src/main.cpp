@@ -15,6 +15,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.  *
  ***************************************************************************/
 
+#include <cstdlib>
 #include <cstring> /* strcmp */
 #include <iomanip>
 #include <iostream>
@@ -61,18 +62,18 @@ main(int argc, char* argv[])
 {
 	if (argc != 2) {
 		showUsage(argv[0]);
-		return -1;
+		return EXIT_FAILURE;
 	}
 
 	portaudio::AutoSystem portaudio;
 
 	if (std::strcmp(argv[1], "-o") == 0) {
 		showAudioOutputDevices();
-		return 0;
+		return EXIT_SUCCESS;
 	}
 
 	ModuleController controller(std::cin, std::cout, argv[1]);
 	controller.exec();
 
-	return 0;
+	return EXIT_SUCCESS;
 }
