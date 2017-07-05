@@ -2,8 +2,9 @@
 - Requirements:
 
   - A C++ compiler with C++14 support.
-    The following compiler has been tested:
-    - GCC 5.4 (Linux x86_64).
+    The following compilers have been tested:
+    - GCC 5.4 (Linux+GNU x86_64).
+    - GCC 7.1 (Linux+GNU x86_64).
 
   - PortAudio with C++ binding (tested with version v19_20140130).
 
@@ -17,8 +18,9 @@
   mkdir ../gama_tts_speech_dispatcher_module-build
   cd ../gama_tts_speech_dispatcher_module-build
 
+  # If the Speech Dispatcher modules are in /usr/lib/speech-dispatcher-modules/:
   cmake -D CMAKE_INSTALL_PREFIX=/usr -D CMAKE_BUILD_TYPE=Release $pkg_dir
-  # or
+  # If the Speech Dispatcher modules are in /usr/lib64/speech-dispatcher-modules/:
   cmake -D CMAKE_INSTALL_PREFIX=/usr -D CMAKE_BUILD_TYPE=Release -D LIB_DIR_SUFFIX=64 $pkg_dir
 
   make
@@ -37,7 +39,10 @@
     AddModule "dummy"         "sd_dummy"      ""
 
 - Edit the file /etc/speech-dispatcher/modules/gama_tts.conf if necessary.
-  The parameter config_dir_path must be set to the path to GamaTTS's data.
+
+- Execute:
+
+  killall speech-dispatcher
 
 - Test:
 

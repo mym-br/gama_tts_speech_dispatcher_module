@@ -5,13 +5,15 @@ if(UNIX)
     if(APPLE)
         set(CMAKE_CXX_FLAGS "-std=c++14 -stdlib=libc++")
     else()
-        set(CMAKE_CXX_FLAGS "-std=c++14 -Wall -Wextra -march=native")
+        set(CMAKE_CXX_FLAGS "-std=c++14 -Wall -Wextra")
     endif()
 endif()
 
 find_package(PkgConfig)
 
-add_executable(sd_gama_tts
+pkg_check_modules(PORTAUDIOCPP REQUIRED portaudiocpp)
+
+set(SOURCE_FILES
     src/main.cpp
     src/ModuleConfiguration.cpp
     src/ModuleConfiguration.h
@@ -22,8 +24,6 @@ add_executable(sd_gama_tts
     src/Util.cpp
     src/Util.h
 )
-
-pkg_check_modules(PORTAUDIOCPP portaudiocpp)
 
 find_file(LOCAL_GAMA_TTS CMakeLists.txt PATHS ${CMAKE_BINARY_DIR}/../gama_tts/ NO_DEFAULT_PATH)
 if(LOCAL_GAMA_TTS)
@@ -38,24 +38,26 @@ if(LOCAL_GAMA_TTS)
     link_directories(
         ${PORTAUDIOCPP_LIBRARY_DIRS}
     )
+    add_executable(sd_gama_tts ${SOURCE_FILES})
     target_link_libraries(sd_gama_tts
         -L../gama_tts-build -lgamatts
         ${PORTAUDIOCPP_LIBRARIES}
     )
 else()
     message(STATUS "Using system GamaTTS")
-    pkg_check_modules(SYSTEM_GAMA_TTS gama_tts)
+    pkg_check_modules(GAMATTS REQUIRED gama_tts)
     include_directories(
         src
-        ${SYSTEM_GAMA_TTS_INCLUDE_DIRS}
+        ${GAMATTS_INCLUDE_DIRS}
         ${PORTAUDIOCPP_INCLUDE_DIRS}
     )
     link_directories(
-        ${SYSTEM_GAMA_TTS_LIBRARY_DIRS}
+        ${GAMATTS_LIBRARY_DIRS}
         ${PORTAUDIOCPP_LIBRARY_DIRS}
     )
+    add_executable(sd_gama_tts ${SOURCE_FILES})
     target_link_libraries(sd_gama_tts
-        ${SYSTEM_GAMA_TTS_LIBRARIES}
+        ${GAMATTS_LIBRARIES}
         ${PORTAUDIOCPP_LIBRARIES}
     )
 endif()

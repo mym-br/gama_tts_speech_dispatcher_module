@@ -1,8 +1,10 @@
 
-config_dir_path = @CMAKE_INSTALL_PREFIX@/share/gama_tts/data/english/vtm0
+config_dir_path = /usr/local/share/gama_tts/data/english/vtm5
 
 voice_file = voice_male.config
 
-# Execute "sd_gama_tts -o" to get the list of devices.
+# Execute "/usr/lib64/speech-dispatcher-modules/sd_gama_tts -o"
+# or        "/usr/lib/speech-dispatcher-modules/sd_gama_tts -o"
+# to obtain the list of devices.
 # -1: use default
 audio_output_device_index = -1
