@@ -24,18 +24,19 @@
 
 #include "ModuleController.h"
 
+#define PROGRAM_NAME "sd_gama_tts"
 #define PROGRAM_VERSION "0.1.5"
 
 
 
 void
-showUsage(const char* progName)
+showUsage()
 {
 	std::cerr << "\nGamaTTS module " << PROGRAM_VERSION << " for Speech Dispatcher.\n\n";
 	std::cerr << "Usage:\n"
-			<< progName << " <config. file path>\n"
+			<< PROGRAM_NAME << " <config. file path>\n"
 			<< "        Run module.\n"
-			<< progName << " -o\n"
+			<< PROGRAM_NAME << " -o\n"
 			<< "        List audio output devices.\n"
 			<< std::endl;
 }
@@ -61,7 +62,7 @@ int
 main(int argc, char* argv[])
 {
 	if (argc != 2) {
-		showUsage(argv[0]);
+		showUsage();
 		return EXIT_FAILURE;
 	}
 
