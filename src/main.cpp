@@ -25,7 +25,7 @@
 #include "ModuleController.h"
 
 #define PROGRAM_NAME "sd_gama_tts"
-#define PROGRAM_VERSION "0.1.5"
+#define PROGRAM_VERSION "0.1.6"
 
 
 
