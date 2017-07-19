@@ -28,7 +28,7 @@ const std::string spellStr{"spell"};
 const std::string  iconStr{"icon"};
 const std::string  nullStr{"NULL"};
 
-}
+} // namespace
 
 ModuleConfiguration::ModuleConfiguration()
 		: logLevel{}

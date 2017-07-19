@@ -23,7 +23,7 @@ const std::string  ltStr{"lt;"};
 const std::string  gtStr{"gt;"};
 const std::string ampStr{"amp;"};
 
-}
+} // namespace
 
 namespace Util {
 

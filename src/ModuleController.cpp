@@ -68,7 +68,7 @@ const std::string  synthesisVoiceStr{"synthesis_voice"};
 const std::string           voiceStr{"voice"};
 const std::string          volumeStr{"volume"};
 
-}
+} // namespace
 
 ModuleController::ModuleController(std::istream& in, std::ostream& out, const char* configFilePath)
 		: state_{STATE_IDLE}
