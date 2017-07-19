@@ -20,9 +20,8 @@
 #include <iomanip>
 #include <iostream>
 
-#include "portaudiocpp/PortAudioCpp.hxx"
-
 #include "ModuleController.h"
+#include "RtAudio.h"
 
 #define PROGRAM_NAME "sd_gama_tts"
 #define PROGRAM_VERSION "0.1.6"
@@ -44,16 +43,27 @@ showUsage()
 void
 showAudioOutputDevices()
 {
-	portaudio::System& sys = portaudio::System::instance();
+	RtAudio audio;
 
-	std::cout << "Audio output devices:\n";
-
-	int i = 0;
-	for (auto iter = sys.devicesBegin(); iter != sys.devicesEnd(); ++iter, ++i) {
-		std::cout << std::setw(3) << i << ": " << '[' << iter->hostApi().name() << "] " << iter->name() << '\n';
+	unsigned int devices = audio.getDeviceCount();
+	if (devices == 0) {
+		std::cout << "No audio output devices found." << std::endl;
+		return;
 	}
 
-	std::cout << "Default output device: " << sys.defaultOutputDevice().index() << std::endl;
+	std::cout << "Audio output devices:\n";
+	RtAudio::DeviceInfo info;
+	for (unsigned int i = 0; i < devices; ++i) {
+		info = audio.getDeviceInfo(i);
+		if (info.probed && info.outputChannels > 0) {
+			std::cout << std::setw(3) << i << ": " << info.name;
+			if (info.isDefaultOutput) {
+				std::cout << " (default)";
+			}
+			std::cout << '\n';
+		}
+	}
+	std::cout << std::endl;
 }
 
 
@@ -65,8 +75,6 @@ main(int argc, char* argv[])
 		showUsage();
 		return EXIT_FAILURE;
 	}
-
-	portaudio::AutoSystem portaudio;
 
 	if (std::strcmp(argv[1], "-o") == 0) {
 		showAudioOutputDevices();

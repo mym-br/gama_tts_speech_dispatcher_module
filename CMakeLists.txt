@@ -11,7 +11,7 @@ endif()
 
 find_package(PkgConfig)
 
-pkg_check_modules(PORTAUDIOCPP REQUIRED portaudiocpp)
+include(${CMAKE_SOURCE_DIR}/src/rtaudio/RtAudio.cmake)
 
 set(SOURCE_FILES
     src/main.cpp
@@ -19,46 +19,42 @@ set(SOURCE_FILES
     src/ModuleConfiguration.h
     src/ModuleController.cpp
     src/ModuleController.h
+    src/rtaudio/RtAudio.cpp
+    src/rtaudio/RtAudio.h
     src/SynthesizerController.cpp
     src/SynthesizerController.h
     src/Util.cpp
     src/Util.h
 )
 
+include_directories(
+    src
+    src/rtaudio
+)
+
 find_file(LOCAL_GAMA_TTS CMakeLists.txt PATHS ${CMAKE_BINARY_DIR}/../gama_tts/ NO_DEFAULT_PATH)
 if(LOCAL_GAMA_TTS)
     message(STATUS "Using local GamaTTS")
     include_directories(
-        src
         ../gama_tts/src
         ../gama_tts/src/vtm
         ../gama_tts/src/vtm_control_model
-        ${PORTAUDIOCPP_INCLUDE_DIRS}
-    )
-    link_directories(
-        ${PORTAUDIOCPP_LIBRARY_DIRS}
     )
     add_executable(sd_gama_tts ${SOURCE_FILES})
     target_link_libraries(sd_gama_tts
         -L../gama_tts-build -lgamatts
-        ${PORTAUDIOCPP_LIBRARIES}
+        ${RTAUDIO_LINKLIBS}
     )
 else()
     message(STATUS "Using system GamaTTS")
     pkg_check_modules(GAMATTS REQUIRED gama_tts)
     include_directories(
-        src
         ${GAMATTS_INCLUDE_DIRS}
-        ${PORTAUDIOCPP_INCLUDE_DIRS}
-    )
-    link_directories(
-        ${GAMATTS_LIBRARY_DIRS}
-        ${PORTAUDIOCPP_LIBRARY_DIRS}
     )
     add_executable(sd_gama_tts ${SOURCE_FILES})
     target_link_libraries(sd_gama_tts
         ${GAMATTS_LIBRARIES}
-        ${PORTAUDIOCPP_LIBRARIES}
+        ${RTAUDIO_LINKLIBS}
     )
 endif()
 

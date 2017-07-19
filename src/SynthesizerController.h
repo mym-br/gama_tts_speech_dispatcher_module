@@ -1,5 +1,5 @@
 /***************************************************************************
- *  Copyright 2015 Marcelo Y. Matuda                                       *
+ *  Copyright 2015, 2017 Marcelo Y. Matuda                                 *
  *                                                                         *
  *  This program is free software: you can redistribute it and/or modify   *
  *  it under the terms of the GNU General Public License as published by   *
@@ -25,9 +25,8 @@
 #include <thread>
 #include <vector>
 
-#include "portaudiocpp/PortAudioCpp.hxx"
-
 #include "ModuleController.h"
+#include "RtAudio.h"
 
 
 
@@ -51,6 +50,7 @@ public:
 	void exec();
 
 	void wait();
+	int audioCallback(float* outputBuffer, unsigned int nBufferFrames);
 private:
 	enum State {
 		STATE_STOPPED,
@@ -61,9 +61,6 @@ private:
 	void init();
 	void set();
 	void speak();
-
-	int portaudioCallback(const void* inputBuffer, void* paOutputBuffer, unsigned long framesPerBuffer,
-				const PaStreamCallbackTimeInfo* timeInfo, PaStreamCallbackFlags statusFlags);
 
 	ModuleController& moduleController_;
 	std::thread synthThread_;
@@ -83,11 +80,12 @@ private:
 	double defaultPitchOffset_;
 
 	unsigned int audioBufferIndex_;
-	int audioOutputDeviceIndex_;
 
 	std::atomic_uint state_;
 	float fadeOutAmplitude_;
 	float fadeOutDelta_;
+
+	RtAudio audio_;
 };
 
 #endif /* SYNTHESIZER_CONTROLLER_H_ */

@@ -1,5 +1,5 @@
 /***************************************************************************
- *  Copyright 2015 Marcelo Y. Matuda                                       *
+ *  Copyright 2015, 2017 Marcelo Y. Matuda                                 *
  *                                                                         *
  *  This program is free software: you can redistribute it and/or modify   *
  *  it under the terms of the GNU General Public License as published by   *
@@ -18,9 +18,9 @@
 #include "SynthesizerController.h"
 
 #include <cmath> /* pow */
+#include <chrono>
 #include <exception>
 #include <iostream>
-#include <string>
 
 #include "ConfigurationData.h"
 #include "Controller.h"
@@ -32,6 +32,25 @@
 #define VTM_CONTROL_MODEL_CONFIG_FILE "/artic.xml"
 #define VTM_CONFIG_FILE_NAME "/vtm.config"
 #define FADE_OUT_TIME_MS 30.0
+#define DEFAULT_AUDIO_FRAMES_PER_BUFFER 256
+
+
+
+namespace {
+
+int
+rtAudioCallback(void* outputBuffer, void* /*inputBuffer*/, unsigned int nBufferFrames,
+		double /*streamTime*/, RtAudioStreamStatus status, void* userData)
+{
+	float* buffer = static_cast<float*>(outputBuffer);
+	if (status) {
+		std::cerr << "[RtAudio] Stream underflow detected!" << std::endl;
+	}
+	SynthesizerController* sc = static_cast<SynthesizerController*>(userData);
+	return sc->audioCallback(buffer, nBufferFrames);
+}
+
+} // namespace
 
 
 
@@ -41,7 +60,6 @@ SynthesizerController::SynthesizerController(ModuleController& moduleController)
 		, commandType_{ModuleController::COMMAND_NONE}
 		, defaultPitchOffset_{}
 		, audioBufferIndex_{}
-		, audioOutputDeviceIndex_{-1}
 		, state_{STATE_STOPPED}
 		, fadeOutAmplitude_{1.0}
 		, fadeOutDelta_{}
@@ -84,13 +102,59 @@ SynthesizerController::wait()
 	}
 }
 
+int
+SynthesizerController::audioCallback(float* outputBuffer, unsigned int nBufferFrames)
+{
+	const unsigned int st = state_;
+
+	const unsigned int framesAvailable = audioBuffer_.size() - audioBufferIndex_;
+	const unsigned int numFrames = (framesAvailable > nBufferFrames) ? nBufferFrames : framesAvailable;
+	if (st == STATE_STOPPING) {
+		for (unsigned int i = 0; i < numFrames; ++i) {
+			fadeOutAmplitude_ -= fadeOutDelta_;
+			if (fadeOutAmplitude_ < 0.0) fadeOutAmplitude_ = 0.0;
+			const unsigned int baseIndex = i * 2;
+			const float value = audioBuffer_[audioBufferIndex_ + i] * fadeOutAmplitude_;
+			outputBuffer[baseIndex]     = value;
+			outputBuffer[baseIndex + 1] = value;
+		}
+	} else {
+		for (unsigned int i = 0; i < numFrames; ++i) {
+			const unsigned int baseIndex = i * 2;
+			const float value = audioBuffer_[audioBufferIndex_ + i];
+			outputBuffer[baseIndex]     = value;
+			outputBuffer[baseIndex + 1] = value;
+		}
+	}
+	audioBufferIndex_ += numFrames;
+
+	for (unsigned int i = numFrames; i < nBufferFrames; ++i) {
+		const unsigned int baseIndex = i * 2;
+		outputBuffer[baseIndex]     = 0;
+		outputBuffer[baseIndex + 1] = 0;
+	}
+	if (st == STATE_STOPPING && fadeOutAmplitude_ == 0.0) {
+		state_ = STATE_STOPPED;
+		return 1;
+	}
+	if (audioBufferIndex_ == audioBuffer_.size()) {
+		state_ = STATE_STOPPED;
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
 void
 SynthesizerController::init()
 {
 	try {
 		GS::ConfigurationData data(commandMessage_);
 		const std::string configDirPath = data.value<std::string>("config_dir_path");
-		audioOutputDeviceIndex_ = data.value<int>("audio_output_device_index");
+		int audioOutputDeviceIndex = data.value<int>("audio_output_device_index");
+
+		//----------------------------
+		// Initialize the synthesizer.
 
 		model_ = std::make_unique<GS::VTMControlModel::Model>();
 		model_->load(configDirPath.c_str(), VTM_CONTROL_MODEL_CONFIG_FILE);
@@ -107,6 +171,26 @@ SynthesizerController::init()
 		vtmData.insert(*vtmControlConfig.voiceData);
 
 		vocalTractModel_ = GS::VTM::VocalTractModel::getInstance(vtmData);
+
+		//-----------------------------
+		// Initialize the audio device.
+
+		const double sampleRate = vocalTractModel_->outputRate();
+		fadeOutDelta_ = 1.0 / (FADE_OUT_TIME_MS * 1.0e-3 * sampleRate);
+
+		RtAudio::StreamParameters audioStreamParameters;
+		if (audioOutputDeviceIndex == -1) {
+			audioStreamParameters.deviceId = audio_.getDefaultOutputDevice();
+		} else {
+			audioStreamParameters.deviceId = audioOutputDeviceIndex;
+		}
+		audioStreamParameters.nChannels = 2;
+		audioStreamParameters.firstChannel = 0;
+		unsigned int bufferFrames = DEFAULT_AUDIO_FRAMES_PER_BUFFER;
+
+		audio_.openStream(&audioStreamParameters, nullptr, RTAUDIO_FLOAT32,
+					static_cast<unsigned int>(sampleRate + 0.5), &bufferFrames, rtAudioCallback, this);
+
 	} catch (const std::exception& exc) {
 		std::ostringstream msg;
 		msg << "[SynthesizerController::init] Could not initialize the synthesis controller. Reason: " << exc.what() << '.';
@@ -140,7 +224,11 @@ void
 SynthesizerController::speak()
 {
 	if (!modelController_) {
-		moduleController_.setSynthCommandResult(commandType_, true, "Not initialized.");
+		moduleController_.setSynthCommandResult(commandType_, true, "The synthesizer has not been initialized.");
+		return;
+	}
+	if (!audio_.isStreamOpen()) {
+		moduleController_.setSynthCommandResult(commandType_, true, "The audio device has not been initialized.");
 		return;
 	}
 
@@ -171,94 +259,30 @@ SynthesizerController::speak()
 
 	moduleController_.sendBeginEvent();
 
-	const double sampleRate = vocalTractModel_->outputRate();
 	audioBufferIndex_ = 0;
-
 	fadeOutAmplitude_ = 1.0;
-	fadeOutDelta_ = 1.0 / (FADE_OUT_TIME_MS * 1.0e-3 * sampleRate);
 
 	try {
-		portaudio::System& sys = portaudio::System::instance();
-		if (audioOutputDeviceIndex_ >= sys.deviceCount()) {
-			std::cerr << "Invalid audio output device index: " << audioOutputDeviceIndex_ << " (should be < " << sys.deviceCount() << "). Using default." << std::endl;
-			audioOutputDeviceIndex_ = -1;
-		}
-		portaudio::Device& dev = (audioOutputDeviceIndex_ != -1) ?
-						sys.deviceByIndex(audioOutputDeviceIndex_) :
-						sys.defaultOutputDevice();
-		portaudio::DirectionSpecificStreamParameters outParams(dev, 2 /* channels */, portaudio::FLOAT32,
-							true /* interleaved */, dev.defaultLowOutputLatency(), nullptr);
-		portaudio::StreamParameters params(portaudio::DirectionSpecificStreamParameters::null(), outParams, sampleRate,
-							paFramesPerBufferUnspecified, paClipOff);
-		portaudio::MemFunCallbackStream<SynthesizerController> stream(params, *this, &SynthesizerController::portaudioCallback);
-
 		state_ = STATE_PLAYING;
 		bool stopping = false;
-		stream.start();
-		while (stream.isActive()) {
-			sys.sleep(100 /* ms */);
-
+		audio_.startStream();
+		while (audio_.isStreamRunning()) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			if (!stopping) {
-				unsigned int moduleControllerState = moduleController_.state();
+				const unsigned int moduleControllerState = moduleController_.state();
 				if (moduleControllerState == ModuleController::STATE_STOP_REQUESTED) {
 					state_ = STATE_STOPPING;
 					stopping = true;
 				}
 			}
 		}
-		stream.stop();
 		if (stopping) {
 			moduleController_.sendStopEvent();
 			return;
 		}
 	} catch (const std::exception& exc) {
-		std::cerr << "[SynthesizerController::speak][PortAudio] Caught exception: " << exc.what() << '.' << std::endl;
+		std::cerr << "[SynthesizerController::speak] Caught exception: " << exc.what() << '.' << std::endl;
 	}
 
 	moduleController_.sendEndEvent();
-}
-
-int
-SynthesizerController::portaudioCallback(const void* /*inputBuffer*/, void* paOutputBuffer, unsigned long framesPerBuffer,
-			const PaStreamCallbackTimeInfo* /*timeInfo*/, PaStreamCallbackFlags /*statusFlags*/)
-{
-	float* out = static_cast<float*>(paOutputBuffer);
-	const unsigned int st = state_;
-
-	const unsigned int framesAvailable = audioBuffer_.size() - audioBufferIndex_;
-	const unsigned int numFrames = (framesAvailable > framesPerBuffer) ? framesPerBuffer : framesAvailable;
-	if (st == STATE_STOPPING) {
-		for (unsigned int i = 0; i < numFrames; ++i) {
-			fadeOutAmplitude_ -= fadeOutDelta_;
-			if (fadeOutAmplitude_ < 0.0) fadeOutAmplitude_ = 0.0;
-			const unsigned int baseIndex = i * 2;
-			const float value = audioBuffer_[audioBufferIndex_ + i] * fadeOutAmplitude_;
-			out[baseIndex]     = value;
-			out[baseIndex + 1] = value;
-		}
-	} else {
-		for (unsigned int i = 0; i < numFrames; ++i) {
-			const unsigned int baseIndex = i * 2;
-			const float value = audioBuffer_[audioBufferIndex_ + i];
-			out[baseIndex]     = value;
-			out[baseIndex + 1] = value;
-		}
-	}
-	audioBufferIndex_ += numFrames;
-
-	for (unsigned int i = numFrames; i < framesPerBuffer; ++i) {
-		const unsigned int baseIndex = i * 2;
-		out[baseIndex]     = 0;
-		out[baseIndex + 1] = 0;
-	}
-	if (st == STATE_STOPPING && fadeOutAmplitude_ == 0.0) {
-		state_ = STATE_STOPPED;
-		return paComplete;
-	}
-	if (audioBufferIndex_ == audioBuffer_.size()) {
-		state_ = STATE_STOPPED;
-		return paComplete;
-	} else {
-		return paContinue;
-	}
 }

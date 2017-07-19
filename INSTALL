@@ -6,8 +6,6 @@
     - GCC 5.4 (Linux+GNU x86_64).
     - GCC 7.1 (Linux+GNU x86_64).
 
-  - PortAudio with C++ binding (tested with version v19_20140130).
-
   - Speech Dispatcher (tested with version 0.8.6).
 
   - GamaTTS (use the latest version).
