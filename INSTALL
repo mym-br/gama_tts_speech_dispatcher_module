@@ -10,11 +10,16 @@
 
   - GamaTTS (use the latest version).
 
+  - Libraries and headers for the audio interface (ALSA, JACK or PulseAudio).
+
 - Build (Linux):
 
   pkg_dir=$PWD
   mkdir ../gama_tts_speech_dispatcher_module-build
   cd ../gama_tts_speech_dispatcher_module-build
+
+  # If you want to use PulseAudio, add "-D AUDIO_LINUX_ALSA=OFF"
+  # (without the quotes) after the "cmake" command below.
 
   # If the Speech Dispatcher modules are in /usr/lib/speech-dispatcher-modules/:
   cmake -D CMAKE_INSTALL_PREFIX=/usr -D CMAKE_BUILD_TYPE=Release $pkg_dir
