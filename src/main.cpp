@@ -24,7 +24,7 @@
 #include "RtAudio.h"
 
 #define PROGRAM_NAME "sd_gama_tts"
-#define PROGRAM_VERSION "0.1.6"
+#define PROGRAM_VERSION "0.1.7"
 
 
 
