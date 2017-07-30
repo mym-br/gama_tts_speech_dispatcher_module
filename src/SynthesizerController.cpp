@@ -175,7 +175,7 @@ SynthesizerController::init()
 		//-----------------------------
 		// Initialize the audio device.
 
-		const double sampleRate = vocalTractModel_->outputRate();
+		const double sampleRate = vocalTractModel_->outputSampleRate();
 		fadeOutDelta_ = 1.0 / (FADE_OUT_TIME_MS * 1.0e-3 * sampleRate);
 
 		RtAudio::StreamParameters audioStreamParameters;
@@ -242,7 +242,7 @@ SynthesizerController::speak()
 
 		std::string phoneticString = textParser_->parse(commandMessage_.c_str());
 		modelController_->fillParameterStream(phoneticString, vtmParamStream_);
-		vocalTractModel_->synthesizeToBuffer(vtmParamStream_, audioBuffer_);
+		modelController_->synthesizeToBuffer(vtmParamStream_, audioBuffer_);
 	} catch (const std::exception& exc) {
 		std::ostringstream msg;
 		msg << "[SynthesizerController::speak] Could not synthesize the text. Reason: " << exc.what() << '.';
