@@ -20,7 +20,6 @@
 
 #include <atomic>
 #include <memory>
-#include <sstream>
 #include <string>
 #include <thread>
 #include <vector>
@@ -31,9 +30,6 @@
 
 
 namespace GS {
-	namespace VTM {
-		class VocalTractModel;
-	}
 	namespace VTMControlModel {
 		class Controller;
 		class Model;
@@ -68,12 +64,10 @@ private:
 	std::unique_ptr<GS::VTMControlModel::Model> model_;
 	std::unique_ptr<GS::VTMControlModel::Controller> modelController_;
 	std::unique_ptr<GS::VTMControlModel::TextParser> textParser_;
-	std::unique_ptr<GS::VTM::VocalTractModel> vocalTractModel_;
 
 	ModuleController::CommandType commandType_;
 	std::string commandMessage_;
 
-	std::stringstream vtmParamStream_;
 	std::vector<float> audioBuffer_;
 
 	ModuleConfiguration moduleConfig_;

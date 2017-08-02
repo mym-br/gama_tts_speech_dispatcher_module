@@ -27,10 +27,8 @@
 #include "Model.h"
 #include "TextParser.h"
 #include "Util.h"
-#include "VocalTractModel.h"
 
 #define VTM_CONTROL_MODEL_CONFIG_FILE "/artic.xml"
-#define VTM_CONFIG_FILE_NAME "/vtm.config"
 #define FADE_OUT_TIME_MS 30.0
 #define DEFAULT_AUDIO_FRAMES_PER_BUFFER 256
 
@@ -165,17 +163,10 @@ SynthesizerController::init()
 
 		textParser_ = GS::VTMControlModel::TextParser::getInstance(configDirPath, vtmControlConfig);
 
-		std::ostringstream vtmConfigFilePath;
-		vtmConfigFilePath << configDirPath << VTM_CONFIG_FILE_NAME;
-		GS::ConfigurationData vtmData(vtmConfigFilePath.str());
-		vtmData.insert(*vtmControlConfig.voiceData);
-
-		vocalTractModel_ = GS::VTM::VocalTractModel::getInstance(vtmData);
-
 		//-----------------------------
 		// Initialize the audio device.
 
-		const double sampleRate = vocalTractModel_->outputSampleRate();
+		const double sampleRate = modelController_->outputSampleRate();
 		fadeOutDelta_ = 1.0 / (FADE_OUT_TIME_MS * 1.0e-3 * sampleRate);
 
 		RtAudio::StreamParameters audioStreamParameters;
@@ -236,13 +227,9 @@ SynthesizerController::speak()
 	// Generate the audio.
 
 	try {
-		// Reset the stream.
-		vtmParamStream_.str("");
-		vtmParamStream_.clear();
+		const std::string phoneticString = textParser_->parse(commandMessage_.c_str());
+		modelController_->synthesizePhoneticStringToBuffer(phoneticString, nullptr, audioBuffer_);
 
-		std::string phoneticString = textParser_->parse(commandMessage_.c_str());
-		modelController_->fillParameterStream(phoneticString, vtmParamStream_);
-		modelController_->synthesizeToBuffer(vtmParamStream_, audioBuffer_);
 	} catch (const std::exception& exc) {
 		std::ostringstream msg;
 		msg << "[SynthesizerController::speak] Could not synthesize the text. Reason: " << exc.what() << '.';
