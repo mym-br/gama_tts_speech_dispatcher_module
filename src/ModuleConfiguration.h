@@ -23,15 +23,15 @@
 
 
 struct ModuleConfiguration {
-	enum PunctuationMode {
-		PUNCTUATION_NONE,
-		PUNCTUATION_SOME,
-		PUNCTUATION_ALL
+	enum class PunctuationMode {
+		none,
+		some,
+		all
 	};
-	enum CapitalLetterRecognition {
-		CAPITAL_LETTER_RECOGNITION_NONE,
-		CAPITAL_LETTER_RECOGNITION_SPELL,
-		CAPITAL_LETTER_RECOGNITION_ICON
+	enum class CapitalLetterRecognition {
+		none,
+		spell,
+		icon
 	};
 
 	unsigned int logLevel;

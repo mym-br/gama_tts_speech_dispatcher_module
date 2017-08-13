@@ -55,10 +55,10 @@ rtAudioCallback(void* outputBuffer, void* /*inputBuffer*/, unsigned int nBufferF
 SynthesizerController::SynthesizerController(ModuleController& moduleController)
 		: moduleController_{moduleController}
 		, synthThread_{&SynthesizerController::exec, std::ref(*this)}
-		, commandType_{ModuleController::COMMAND_NONE}
+		, commandType_{ModuleController::CommandType::none}
 		, defaultPitchOffset_{}
 		, audioBufferIndex_{}
-		, state_{STATE_STOPPED}
+		, state_{State::stopped}
 		, fadeOutAmplitude_{1.0}
 		, fadeOutDelta_{}
 {
@@ -75,16 +75,16 @@ SynthesizerController::exec()
 		moduleController_.getSynthCommand(commandType_, commandMessage_, true);
 
 		switch (commandType_) {
-		case ModuleController::COMMAND_INIT:
+		case ModuleController::CommandType::init:
 			init();
 			break;
-		case ModuleController::COMMAND_SET:
+		case ModuleController::CommandType::set:
 			set();
 			break;
-		case ModuleController::COMMAND_SPEAK:
+		case ModuleController::CommandType::speak:
 			speak();
 			break;
-		case ModuleController::COMMAND_QUIT:
+		case ModuleController::CommandType::quit:
 			return;
 		default:
 			break;
@@ -103,11 +103,11 @@ SynthesizerController::wait()
 int
 SynthesizerController::audioCallback(float* outputBuffer, unsigned int nBufferFrames)
 {
-	const unsigned int st = state_;
+	const State st = state_;
 
 	const unsigned int framesAvailable = audioBuffer_.size() - audioBufferIndex_;
 	const unsigned int numFrames = (framesAvailable > nBufferFrames) ? nBufferFrames : framesAvailable;
-	if (st == STATE_STOPPING) {
+	if (st == State::stopping) {
 		for (unsigned int i = 0; i < numFrames; ++i) {
 			fadeOutAmplitude_ -= fadeOutDelta_;
 			if (fadeOutAmplitude_ < 0.0) fadeOutAmplitude_ = 0.0;
@@ -131,12 +131,12 @@ SynthesizerController::audioCallback(float* outputBuffer, unsigned int nBufferFr
 		outputBuffer[baseIndex]     = 0;
 		outputBuffer[baseIndex + 1] = 0;
 	}
-	if (st == STATE_STOPPING && fadeOutAmplitude_ == 0.0) {
-		state_ = STATE_STOPPED;
+	if (st == State::stopping && fadeOutAmplitude_ == 0.0) {
+		state_ = State::stopped;
 		return 1;
 	}
 	if (audioBufferIndex_ == audioBuffer_.size()) {
-		state_ = STATE_STOPPED;
+		state_ = State::stopped;
 		return 1;
 	} else {
 		return 0;
@@ -205,9 +205,9 @@ SynthesizerController::set()
 	vtmControlConfig.tempo = std::pow(10.0, moduleConfig_.rate / 100.0);
 
 	if (moduleConfig_.spellingMode) {
-		textParser_->setMode(GS::VTMControlModel::TextParser::MODE_LETTER);
+		textParser_->setMode(GS::VTMControlModel::TextParser::Mode::letter);
 	} else {
-		textParser_->setMode(GS::VTMControlModel::TextParser::MODE_NORMAL);
+		textParser_->setMode(GS::VTMControlModel::TextParser::Mode::normal);
 	}
 }
 
@@ -250,15 +250,14 @@ SynthesizerController::speak()
 	fadeOutAmplitude_ = 1.0;
 
 	try {
-		state_ = STATE_PLAYING;
+		state_ = State::playing;
 		bool stopping = false;
 		audio_.startStream();
 		while (audio_.isStreamRunning()) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			if (!stopping) {
-				const unsigned int moduleControllerState = moduleController_.state();
-				if (moduleControllerState == ModuleController::STATE_STOP_REQUESTED) {
-					state_ = STATE_STOPPING;
+				if (moduleController_.state() == ModuleController::State::stopRequested) {
+					state_ = State::stopping;
 					stopping = true;
 				}
 			}

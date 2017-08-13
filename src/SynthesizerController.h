@@ -48,10 +48,10 @@ public:
 	void wait();
 	int audioCallback(float* outputBuffer, unsigned int nBufferFrames);
 private:
-	enum State {
-		STATE_STOPPED,
-		STATE_PLAYING,
-		STATE_STOPPING
+	enum class State {
+		stopped,
+		playing,
+		stopping
 	};
 
 	void init();
@@ -75,7 +75,7 @@ private:
 
 	unsigned int audioBufferIndex_;
 
-	std::atomic_uint state_;
+	std::atomic<State> state_;
 	float fadeOutAmplitude_;
 	float fadeOutDelta_;
 

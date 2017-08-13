@@ -34,18 +34,18 @@ class SynthesizerController;
 
 class ModuleController {
 public:
-	enum CommandType {
-		COMMAND_NONE,
-		COMMAND_INIT,
-		COMMAND_SET,
-		COMMAND_SPEAK,
-		COMMAND_STOP,
-		COMMAND_QUIT
+	enum class CommandType {
+		none,
+		init,
+		set,
+		speak,
+		stop,
+		quit
 	};
-	enum State {
-		STATE_IDLE,
-		STATE_SPEAKING,
-		STATE_STOP_REQUESTED
+	enum class State {
+		idle,
+		speaking,
+		stopRequested
 	};
 
 	ModuleController(std::istream& in, std::ostream& out, const char* configFilePath);
@@ -79,7 +79,7 @@ public:
 	void getConfigCopy(ModuleConfiguration& config);
 
 	// [atomic] Called by SynthesizerController.
-	unsigned int state() const { return state_; }
+	State state() const { return state_; }
 private:
 	void handleInitCommand();
 	void handleAudioCommand();
@@ -89,7 +89,7 @@ private:
 	void handleStopCommand();
 	void handleQuitCommand();
 
-	std::atomic_uint state_;
+	std::atomic<State> state_;
 	std::istream& in_;
 	std::ostream& out_;
 	std::string configFilePath_;

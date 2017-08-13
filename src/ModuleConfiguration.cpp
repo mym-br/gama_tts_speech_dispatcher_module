@@ -35,9 +35,9 @@ ModuleConfiguration::ModuleConfiguration()
 		, pitch{}
 		, rate{}
 		, volume{}
-		, punctuationMode(PUNCTUATION_NONE)
+		, punctuationMode(PunctuationMode::none)
 		, spellingMode{}
-		, capitalLetterRecognition(CAPITAL_LETTER_RECOGNITION_NONE)
+		, capitalLetterRecognition(CapitalLetterRecognition::none)
 {
 }
 
@@ -74,11 +74,11 @@ void
 ModuleConfiguration::setPunctuationMode(const std::string& s)
 {
 	if (s == someStr) {
-		punctuationMode = PUNCTUATION_SOME;
+		punctuationMode = PunctuationMode::some;
 	} else if (s == allStr) {
-		punctuationMode = PUNCTUATION_ALL;
+		punctuationMode = PunctuationMode::all;
 	} else { // "none"
-		punctuationMode = PUNCTUATION_NONE;
+		punctuationMode = PunctuationMode::none;
 	}
 }
 
@@ -96,11 +96,11 @@ void
 ModuleConfiguration::setCapitalLetterRecognition(const std::string& s)
 {
 	if (s == spellStr) {
-		capitalLetterRecognition = CAPITAL_LETTER_RECOGNITION_SPELL;
+		capitalLetterRecognition = CapitalLetterRecognition::spell;
 	} else if (s == iconStr) {
-		capitalLetterRecognition = CAPITAL_LETTER_RECOGNITION_ICON;
+		capitalLetterRecognition = CapitalLetterRecognition::icon;
 	} else { // "none"
-		capitalLetterRecognition = CAPITAL_LETTER_RECOGNITION_NONE;
+		capitalLetterRecognition = CapitalLetterRecognition::none;
 	}
 }
 

@@ -71,12 +71,12 @@ const std::string          volumeStr{"volume"};
 } // namespace
 
 ModuleController::ModuleController(std::istream& in, std::ostream& out, const char* configFilePath)
-		: state_{STATE_IDLE}
+		: state_{State::idle}
 		, in_{in}
 		, out_{out}
 		, configFilePath_{configFilePath}
 		, newCommand_{}
-		, commandType_{COMMAND_NONE}
+		, commandType_{CommandType::none}
 		, synthController_{std::make_unique<SynthesizerController>(*this)}
 {
 }
@@ -114,7 +114,7 @@ ModuleController::exec()
 void
 ModuleController::handleInitCommand()
 {
-	setSynthCommand(COMMAND_INIT, configFilePath_);
+	setSynthCommand(CommandType::init, configFilePath_);
 }
 
 void
@@ -192,7 +192,7 @@ ModuleController::handleSetCommand()
 			}
 		}
 	}
-	setSynthCommand(COMMAND_SET, std::string{});
+	setSynthCommand(CommandType::set, std::string{});
 
 	sendResponse(respSetDoneStr);
 }
@@ -215,20 +215,20 @@ ModuleController::handleSpeakCommand()
 
 	Util::stripSSML(msg);
 
-	state_ = STATE_SPEAKING;
-	setSynthCommand(COMMAND_SPEAK, msg);
+	state_ = State::speaking;
+	setSynthCommand(CommandType::speak, msg);
 }
 
 void
 ModuleController::handleStopCommand()
 {
-	state_ = STATE_STOP_REQUESTED;
+	state_ = State::stopRequested;
 }
 
 void
 ModuleController::handleQuitCommand()
 {
-	setSynthCommand(COMMAND_QUIT, std::string());
+	setSynthCommand(CommandType::quit, std::string());
 
 	synthController_->wait();
 
@@ -265,7 +265,7 @@ ModuleController::getSynthCommand(ModuleController::CommandType& type, std::stri
 			}
 		} else {
 			if (!newCommand_) {
-				type = COMMAND_NONE;
+				type = CommandType::none;
 				message.clear();
 				return;
 			}
@@ -283,7 +283,7 @@ void
 ModuleController::setSynthCommandResult(CommandType type, bool failed, const std::string& msg)
 {
 	switch (type) {
-	case COMMAND_INIT:
+	case CommandType::init:
 		if (failed) {
 			std::ostringstream stream;
 			stream << respSynthInitFailStr_1 << msg << '\n' << respSynthInitFailStr_2;
@@ -292,10 +292,10 @@ ModuleController::setSynthCommandResult(CommandType type, bool failed, const std
 			sendResponse(respSynthInitDoneStr);
 		}
 		break;
-	case COMMAND_SPEAK:
+	case CommandType::speak:
 		if (failed) {
 			sendResponse(respSynthSpeakFailStr);
-			state_ = STATE_IDLE;
+			state_ = State::idle;
 		} else {
 			sendResponse(respSynthSpeakDoneStr);
 		}
@@ -326,7 +326,7 @@ ModuleController::sendEndEvent()
 	out_ << respEndEventStr << std::endl;
 	responseMutex_.unlock();
 
-	state_ = STATE_IDLE;
+	state_ = State::idle;
 }
 
 void
@@ -336,7 +336,7 @@ ModuleController::sendStopEvent()
 	out_ << respStopEventStr << std::endl;
 	responseMutex_.unlock();
 
-	state_ = STATE_IDLE;
+	state_ = State::idle;
 }
 
 void
