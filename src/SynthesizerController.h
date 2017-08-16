@@ -63,9 +63,9 @@ private:
 	ModuleController& moduleController_;
 	std::thread synthThread_;
 
+	std::unique_ptr<GS::TextParser::TextParser> textParser_;
 	std::unique_ptr<GS::VTMControlModel::Model> model_;
 	std::unique_ptr<GS::VTMControlModel::Controller> modelController_;
-	std::unique_ptr<GS::TextParser::TextParser> textParser_;
 
 	ModuleController::CommandType commandType_;
 	std::string commandMessage_;

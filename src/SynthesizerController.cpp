@@ -154,14 +154,14 @@ SynthesizerController::init()
 		//----------------------------
 		// Initialize the synthesizer.
 
+		textParser_ = GS::TextParser::TextParser::getInstance(configDirPath);
+
 		model_ = std::make_unique<GS::VTMControlModel::Model>();
 		model_->load(configDirPath.c_str(), VTM_CONTROL_MODEL_CONFIG_FILE);
 
 		modelController_ = std::make_unique<GS::VTMControlModel::Controller>(configDirPath.c_str(), *model_);
 		const GS::VTMControlModel::Configuration& vtmControlConfig = modelController_->vtmControlModelConfiguration();
 		defaultPitchOffset_ = vtmControlConfig.pitchOffset;
-
-		textParser_ = GS::TextParser::TextParser::getInstance(configDirPath);
 
 		//-----------------------------
 		// Initialize the audio device.
