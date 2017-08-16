@@ -37,6 +37,7 @@ if(LOCAL_GAMA_TTS)
     message(STATUS "Using local GamaTTS")
     include_directories(
         ../gama_tts/src
+        ../gama_tts/src/text_parser
         ../gama_tts/src/vtm
         ../gama_tts/src/vtm_control_model
     )

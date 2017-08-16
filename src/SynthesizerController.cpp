@@ -161,7 +161,7 @@ SynthesizerController::init()
 		const GS::VTMControlModel::Configuration& vtmControlConfig = modelController_->vtmControlModelConfiguration();
 		defaultPitchOffset_ = vtmControlConfig.pitchOffset;
 
-		textParser_ = GS::VTMControlModel::TextParser::getInstance(configDirPath, vtmControlConfig);
+		textParser_ = GS::TextParser::TextParser::getInstance(configDirPath);
 
 		//-----------------------------
 		// Initialize the audio device.
@@ -205,9 +205,9 @@ SynthesizerController::set()
 	vtmControlConfig.tempo = std::pow(10.0, moduleConfig_.rate / 100.0);
 
 	if (moduleConfig_.spellingMode) {
-		textParser_->setMode(GS::VTMControlModel::TextParser::Mode::letter);
+		textParser_->setMode(GS::TextParser::TextParser::Mode::letter);
 	} else {
-		textParser_->setMode(GS::VTMControlModel::TextParser::Mode::normal);
+		textParser_->setMode(GS::TextParser::TextParser::Mode::normal);
 	}
 }
 
