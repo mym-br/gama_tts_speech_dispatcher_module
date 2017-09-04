@@ -9,6 +9,8 @@
   - Speech Dispatcher (tested with version 0.8.6).
 
   - GamaTTS (use the latest version).
+    The source files must be in ../gama_tts and the build directory
+    must be ../gama_tts-build.
 
   - Libraries and headers for the audio interface (ALSA, JACK or PulseAudio).
 
@@ -43,11 +45,9 @@
 
 - Edit the file /etc/speech-dispatcher/modules/gama_tts.conf if necessary.
 
-- Execute:
+- Test (Linux):
 
   killall speech-dispatcher
-
-- Test:
 
   spd-say -O
 

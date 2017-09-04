@@ -30,34 +30,25 @@ set(SOURCE_FILES
 include_directories(
     src
     src/rtaudio
+    ../gama_tts/src
+    ../gama_tts/src/text_parser
+    ../gama_tts/src/vtm
+    ../gama_tts/src/vtm_control_model
 )
 
-find_file(LOCAL_GAMA_TTS CMakeLists.txt PATHS ${CMAKE_BINARY_DIR}/../gama_tts/ NO_DEFAULT_PATH)
-if(LOCAL_GAMA_TTS)
-    message(STATUS "Using local GamaTTS")
-    include_directories(
-        ../gama_tts/src
-        ../gama_tts/src/text_parser
-        ../gama_tts/src/vtm
-        ../gama_tts/src/vtm_control_model
+add_executable(sd_gama_tts ${SOURCE_FILES})
+
+IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_link_libraries(sd_gama_tts
+        -L../gama_tts-build-debug -lgamatts
+        ${RTAUDIO_LINKLIBS}
     )
-    add_executable(sd_gama_tts ${SOURCE_FILES})
+ELSE(CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_link_libraries(sd_gama_tts
         -L../gama_tts-build -lgamatts
         ${RTAUDIO_LINKLIBS}
     )
-else()
-    message(STATUS "Using system GamaTTS")
-    pkg_check_modules(GAMATTS REQUIRED gama_tts)
-    include_directories(
-        ${GAMATTS_INCLUDE_DIRS}
-    )
-    add_executable(sd_gama_tts ${SOURCE_FILES})
-    target_link_libraries(sd_gama_tts
-        ${GAMATTS_LIBRARIES}
-        ${RTAUDIO_LINKLIBS}
-    )
-endif()
+ENDIF(CMAKE_BUILD_TYPE STREQUAL "Debug")
 
 if(UNIX AND NOT APPLE)
     install(TARGETS sd_gama_tts
