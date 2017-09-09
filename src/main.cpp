@@ -17,6 +17,7 @@
 
 #include <cstdlib>
 #include <cstring> /* strcmp */
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 
@@ -79,6 +80,14 @@ main(int argc, char* argv[])
 	if (std::strcmp(argv[1], "-o") == 0) {
 		showAudioOutputDevices();
 		return EXIT_SUCCESS;
+	}
+	if (argv[1][0] == '-') {
+		showUsage();
+		return EXIT_FAILURE;
+	}
+	if (!std::ifstream{argv[1]}) {
+		std::cerr << "Could not open the file \"" << argv[1] << "\"." << std::endl;
+		return EXIT_FAILURE;
 	}
 
 	ModuleController controller(std::cin, std::cout, argv[1]);
