@@ -31,12 +31,12 @@ const std::string  nullStr{"NULL"};
 } // namespace
 
 ModuleConfiguration::ModuleConfiguration()
-		: logLevel{}
-		, pitch{}
-		, rate{}
-		, volume{}
+		: logLevel()
+		, pitch()
+		, rate()
+		, volume()
 		, punctuationMode(PunctuationMode::none)
-		, spellingMode{}
+		, spellingMode()
 		, capitalLetterRecognition(CapitalLetterRecognition::none)
 {
 }

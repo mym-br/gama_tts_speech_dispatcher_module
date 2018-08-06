@@ -53,14 +53,14 @@ rtAudioCallback(void* outputBuffer, void* /*inputBuffer*/, unsigned int nBufferF
 
 
 SynthesizerController::SynthesizerController(ModuleController& moduleController)
-		: moduleController_{moduleController}
-		, synthThread_{&SynthesizerController::exec, std::ref(*this)}
-		, commandType_{ModuleController::CommandType::none}
-		, defaultPitchOffset_{}
-		, audioBufferIndex_{}
-		, state_{State::stopped}
-		, fadeOutAmplitude_{1.0}
-		, fadeOutDelta_{}
+		: moduleController_(moduleController)
+		, synthThread_(&SynthesizerController::exec, std::ref(*this))
+		, commandType_(ModuleController::CommandType::none)
+		, defaultPitchOffset_()
+		, audioBufferIndex_()
+		, state_(State::stopped)
+		, fadeOutAmplitude_(1.0)
+		, fadeOutDelta_()
 {
 }
 

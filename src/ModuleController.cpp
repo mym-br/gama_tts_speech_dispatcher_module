@@ -71,13 +71,13 @@ const std::string          volumeStr{"volume"};
 } // namespace
 
 ModuleController::ModuleController(std::istream& in, std::ostream& out, const char* configFilePath)
-		: state_{State::idle}
-		, in_{in}
-		, out_{out}
-		, configFilePath_{configFilePath}
-		, newCommand_{}
-		, commandType_{CommandType::none}
-		, synthController_{std::make_unique<SynthesizerController>(*this)}
+		: state_(State::idle)
+		, in_(in)
+		, out_(out)
+		, configFilePath_(configFilePath)
+		, newCommand_()
+		, commandType_(CommandType::none)
+		, synthController_(std::make_unique<SynthesizerController>(*this))
 {
 }
 
