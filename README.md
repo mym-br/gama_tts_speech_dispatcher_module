@@ -2,25 +2,20 @@
 GamaTTS module for Speech Dispatcher
 ====================================
 
+This is a GamaTTS module for [Speech Dispatcher][].
 
+External code
+-------------
 
-This is a GamaTTS module for Speech Dispatcher
-(http://devel.freebsoft.org/speechd).
-
-This software includes code from RtAudio
-(http://www.music.mcgill.ca/~gary/rtaudio/), provided by Gary Scavone and
+This software includes code from [RtAudio][], provided by Gary Scavone and
 contributors.
-
-
 
 Status
 ------
 
-[pre-alpha]
+**pre-alpha**
 
 Only the basic functionality has been implemented.
-
-
 
 License
 -------
@@ -34,3 +29,6 @@ This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 COPYING file for more details.
+
+[Speech Dispatcher]: http://devel.freebsoft.org/speechd
+[RtAudio]: http://www.music.mcgill.ca/~gary/rtaudio/
