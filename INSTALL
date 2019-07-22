@@ -2,11 +2,10 @@
 - Requirements:
 
   - A C++ compiler with C++14 support.
-    The following compilers have been tested:
-    - GCC 5.4 (Linux+GNU x86_64).
-    - GCC 7.1 (Linux+GNU x86_64).
+    The following compiler has been tested:
+    - GCC 8.3 (Linux+GNU x86_64).
 
-  - Speech Dispatcher (tested with version 0.8.6).
+  - Speech Dispatcher (tested with version 0.9.0).
 
   - GamaTTS (use the latest version).
     The source files must be in ../gama_tts and the build directory
@@ -34,6 +33,9 @@
 
   # Execute as root:
   make install
+  # Only two files are installed:
+  # /etc/speech-dispatcher/modules/gama_tts.conf
+  # /usr/lib/speech-dispatcher-modules/sd_gama_tts (or lib64)
 
 - Add the following line to /etc/speech-dispatcher/speechd.conf:
 
@@ -50,5 +52,6 @@
   killall speech-dispatcher
 
   spd-say -O
+  # Check if gama_tts is shown.
 
   spd-say -o gama_tts 'hello world'
