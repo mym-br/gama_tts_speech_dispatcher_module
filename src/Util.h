@@ -20,6 +20,7 @@
 
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <utility> /* make_pair, pair */
 
 
@@ -30,7 +31,7 @@ void stripSSML(std::string& msg);
 std::pair<std::string, std::string> getNameAndValue(const std::string& s);
 void removeLF(std::string& msg);
 template<typename T> T convertString(const std::string& s);
-bool compare(const std::string& s1, const std::string& s2, std::string::size_type s2Index);
+bool compare(const std::string_view& s1, const std::string& s2, std::string::size_type s2Index);
 template<typename T> T bound(T min, T value, T max);
 
 

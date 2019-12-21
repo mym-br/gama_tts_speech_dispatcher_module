@@ -17,16 +17,18 @@
 
 #include "ModuleConfiguration.h"
 
+#include <string_view>
+
 #include "Util.h"
 
 namespace {
 
-const std::string  someStr{"some"};
-const std::string   allStr{"all"};
-const std::string    onStr{"on"};
-const std::string spellStr{"spell"};
-const std::string  iconStr{"icon"};
-const std::string  nullStr{"NULL"};
+constexpr std::string_view  someStr{"some"};
+constexpr std::string_view   allStr{"all"};
+constexpr std::string_view    onStr{"on"};
+constexpr std::string_view spellStr{"spell"};
+constexpr std::string_view  iconStr{"icon"};
+constexpr std::string_view  nullStr{"NULL"};
 
 } // namespace
 

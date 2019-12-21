@@ -18,6 +18,7 @@
 #include "ModuleController.h"
 
 #include <sstream>
+#include <string_view>
 
 #include "SynthesizerController.h"
 #include "Util.h"
@@ -26,47 +27,47 @@
 
 namespace {
 
-const std::string     audioCmdStr{"AUDIO"};
-const std::string      charCmdStr{"CHAR"};
-const std::string      initCmdStr{"INIT"};
-const std::string       keyCmdStr{"KEY"};
-const std::string  logLevelCmdStr{"LOGLEVEL"};
-const std::string      quitCmdStr{"QUIT"};
-const std::string       setCmdStr{"SET"};
-const std::string soundIconCmdStr{"SOUND_ICON"};
-const std::string     speakCmdStr{"SPEAK"};
-const std::string      stopCmdStr{"STOP"};
+constexpr std::string_view     audioCmdStr{"AUDIO"};
+constexpr std::string_view      charCmdStr{"CHAR"};
+constexpr std::string_view      initCmdStr{"INIT"};
+constexpr std::string_view       keyCmdStr{"KEY"};
+constexpr std::string_view  logLevelCmdStr{"LOGLEVEL"};
+constexpr std::string_view      quitCmdStr{"QUIT"};
+constexpr std::string_view       setCmdStr{"SET"};
+constexpr std::string_view soundIconCmdStr{"SOUND_ICON"};
+constexpr std::string_view     speakCmdStr{"SPEAK"};
+constexpr std::string_view      stopCmdStr{"STOP"};
 
-const std::string respAudioInitStr{      "207 OK RECEIVING AUDIO SETTINGS"};
-const std::string respAudioDoneStr{      "203 OK AUDIO INITIALIZED"};
-const std::string respBeginEventStr{     "701 BEGIN"};
-const std::string respEndEventStr{       "702 END"};
-const std::string respExecFailStr{       "300 ERROR"};
-const std::string respLogLevelInitStr{   "207 OK RECEIVING LOGLEVEL SETTINGS"};
-const std::string respLogLevelDoneStr{   "203 OK LOG LEVEL SET"};
-const std::string respQuitDoneStr{       "210 OK QUIT"};
-const std::string respSetInitStr{        "203 OK RECEIVING SETTINGS"};
-const std::string respSetDoneStr{        "203 OK SETTINGS RECEIVED"};
-const std::string respSpeakInitStr{      "202 OK RECEIVING MESSAGE"};
-const std::string respStopEventStr{      "703 STOP"};
-const std::string respSynthInitDoneStr{  "299-GamaTTS: Initialized successfully.\n"
+constexpr std::string_view respAudioInitStr{      "207 OK RECEIVING AUDIO SETTINGS"};
+constexpr std::string_view respAudioDoneStr{      "203 OK AUDIO INITIALIZED"};
+constexpr std::string_view respBeginEventStr{     "701 BEGIN"};
+constexpr std::string_view respEndEventStr{       "702 END"};
+constexpr std::string_view respExecFailStr{       "300 ERROR"};
+constexpr std::string_view respLogLevelInitStr{   "207 OK RECEIVING LOGLEVEL SETTINGS"};
+constexpr std::string_view respLogLevelDoneStr{   "203 OK LOG LEVEL SET"};
+constexpr std::string_view respQuitDoneStr{       "210 OK QUIT"};
+constexpr std::string_view respSetInitStr{        "203 OK RECEIVING SETTINGS"};
+constexpr std::string_view respSetDoneStr{        "203 OK SETTINGS RECEIVED"};
+constexpr std::string_view respSpeakInitStr{      "202 OK RECEIVING MESSAGE"};
+constexpr std::string_view respStopEventStr{      "703 STOP"};
+constexpr std::string_view respSynthInitDoneStr{  "299-GamaTTS: Initialized successfully.\n"
                                          "299 OK LOADED SUCCESSFULLY"};
-const std::string respSynthInitFailStr_1{"399-GamaTTS: "};
-const std::string respSynthInitFailStr_2{"399 ERR CANT INIT MODULE"};
-const std::string respSynthSpeakFailStr{ "301 ERROR CANT SPEAK"};
-const std::string respSynthSpeakDoneStr{ "200 OK SPEAKING"};
+constexpr std::string_view respSynthInitFailStr_1{"399-GamaTTS: "};
+constexpr std::string_view respSynthInitFailStr_2{"399 ERR CANT INIT MODULE"};
+constexpr std::string_view respSynthSpeakFailStr{ "301 ERROR CANT SPEAK"};
+constexpr std::string_view respSynthSpeakDoneStr{ "200 OK SPEAKING"};
 
-const std::string    capLetRecognStr{"cap_let_recogn"};
-const std::string             dotStr{"."};
-const std::string        languageStr{"language"};
-const std::string        logLevelStr{"log_level"};
-const std::string           pitchStr{"pitch"};
-const std::string punctuationModeStr{"punctuation_mode"};
-const std::string            rateStr{"rate"};
-const std::string    spellingModeStr{"spelling_mode"};
-const std::string  synthesisVoiceStr{"synthesis_voice"};
-const std::string           voiceStr{"voice"};
-const std::string          volumeStr{"volume"};
+constexpr std::string_view    capLetRecognStr{"cap_let_recogn"};
+constexpr std::string_view             dotStr{"."};
+constexpr std::string_view        languageStr{"language"};
+constexpr std::string_view        logLevelStr{"log_level"};
+constexpr std::string_view           pitchStr{"pitch"};
+constexpr std::string_view punctuationModeStr{"punctuation_mode"};
+constexpr std::string_view            rateStr{"rate"};
+constexpr std::string_view    spellingModeStr{"spelling_mode"};
+constexpr std::string_view  synthesisVoiceStr{"synthesis_voice"};
+constexpr std::string_view           voiceStr{"voice"};
+constexpr std::string_view          volumeStr{"volume"};
 
 } // namespace
 
@@ -306,7 +307,7 @@ ModuleController::setSynthCommandResult(CommandType type, bool failed, const std
 }
 
 void
-ModuleController::sendResponse(const std::string& msg)
+ModuleController::sendResponse(const std::string_view& msg)
 {
 	std::lock_guard<std::mutex> lock(responseMutex_);
 	out_ << msg << std::endl;

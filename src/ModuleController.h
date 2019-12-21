@@ -64,7 +64,7 @@ public:
 	void setSynthCommandResult(CommandType type, bool failed, const std::string& msg);
 
 	// [responseMutex_] Called by ModuleController.
-	void sendResponse(const std::string& msg);
+	void sendResponse(const std::string_view& msg);
 
 	// [responseMutex_] Called by SynthesizerController.
 	void sendBeginEvent();

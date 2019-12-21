@@ -19,9 +19,9 @@
 
 namespace {
 
-const std::string  ltStr{"lt;"};
-const std::string  gtStr{"gt;"};
-const std::string ampStr{"amp;"};
+constexpr std::string_view  ltStr{"lt;"};
+constexpr std::string_view  gtStr{"gt;"};
+constexpr std::string_view ampStr{"amp;"};
 
 } // namespace
 
@@ -91,14 +91,14 @@ removeLF(std::string& msg)
 }
 
 bool
-compare(const std::string& s1, const std::string& s2, std::string::size_type s2Index)
+compare(const std::string_view& s1, const std::string& s2, std::string::size_type s2Index)
 {
 	if (s2Index >= s2.length()) return false;
 	if (s2Index + s1.length() > s2.length()) {
 		return false;
 	}
-	std::string::const_iterator it1 = s1.cbegin();
-	std::string::const_iterator it2 = s2.cbegin() + s2Index;
+	auto it1 = s1.cbegin();
+	auto it2 = s2.cbegin() + s2Index;
 	while (it1 != s1.cend()) {
 		if (*it1 != *it2) return false;
 		++it1;
