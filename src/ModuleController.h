@@ -81,6 +81,11 @@ public:
 	// [atomic] Called by SynthesizerController.
 	State state() const { return state_; }
 private:
+	ModuleController(const ModuleController&) = delete;
+	ModuleController& operator=(const ModuleController&) = delete;
+	ModuleController(ModuleController&&) = delete;
+	ModuleController& operator=(ModuleController&&) = delete;
+
 	void handleInitCommand();
 	void handleAudioCommand();
 	void handleLogLevelCommand();

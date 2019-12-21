@@ -41,7 +41,7 @@ namespace GS {
 
 class SynthesizerController {
 public:
-	SynthesizerController(ModuleController& moduleController);
+	explicit SynthesizerController(ModuleController& moduleController);
 	~SynthesizerController();
 
 	// Main thread function.
@@ -55,6 +55,11 @@ private:
 		playing,
 		stopping
 	};
+
+	SynthesizerController(const SynthesizerController&) = delete;
+	SynthesizerController& operator=(const SynthesizerController&) = delete;
+	SynthesizerController(SynthesizerController&&) = delete;
+	SynthesizerController& operator=(SynthesizerController&&) = delete;
 
 	void init();
 	void set();
