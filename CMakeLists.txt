@@ -40,12 +40,12 @@ add_executable(sd_gama_tts ${SOURCE_FILES})
 
 IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_link_libraries(sd_gama_tts
-        -L../gama_tts-build-debug -lgamatts
+        -L../gama_tts-build-debug -l:libgamatts.a
         ${RTAUDIO_LINKLIBS}
     )
 ELSE(CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_link_libraries(sd_gama_tts
-        -L../gama_tts-build -lgamatts
+        -L../gama_tts-build -l:libgamatts.a
         ${RTAUDIO_LINKLIBS}
     )
 ENDIF(CMAKE_BUILD_TYPE STREQUAL "Debug")
