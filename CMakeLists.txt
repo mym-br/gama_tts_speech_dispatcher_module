@@ -9,8 +9,6 @@ if(UNIX)
     endif()
 endif()
 
-find_package(PkgConfig)
-
 include(${CMAKE_SOURCE_DIR}/src/rtaudio/RtAudio.cmake)
 
 set(SOURCE_FILES
