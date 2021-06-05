@@ -5,15 +5,17 @@
     The following compiler has been tested:
     - GCC 8.3 (Linux+GNU x86_64).
 
+  - CMake.
+
   - Speech Dispatcher (tested with version 0.9.0).
 
   - GamaTTS (use the latest version).
     The source files must be in ../gama_tts and the build directory
     must be ../gama_tts-build.
+    Also, it must be installed using (as root):
+      cmake --build . --target install
 
   - Libraries and headers for the audio interface (ALSA, JACK or PulseAudio).
-
-  - CMake.
 
 - Build (Linux+GNU):
 
@@ -29,12 +31,12 @@
   # If the Speech Dispatcher modules are in /usr/lib64/speech-dispatcher-modules/:
   cmake -D CMAKE_INSTALL_PREFIX=/usr -D CMAKE_BUILD_TYPE=Release -D LIB_DIR_SUFFIX=64 $pkg_dir
 
-  make
+  cmake --build .
 
 - Install (Linux+GNU):
 
   # Execute as root:
-  make install
+  cmake --build . --target install
   # Only two files are installed:
   # /etc/speech-dispatcher/modules/gama_tts.conf
   # /usr/lib/speech-dispatcher-modules/sd_gama_tts (or lib64)
@@ -51,7 +53,7 @@
 
 - Test (Linux+GNU):
 
-  killall speech-dispatcher
+  killall /usr/bin/speech-dispatcher
 
   spd-say -O
   # Check if gama_tts is shown.
